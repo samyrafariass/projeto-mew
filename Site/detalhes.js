@@ -811,93 +811,110 @@ async function carregarDetalhes() {
 
 
 /* =========================================================
-   1. FUNÇÃO DA FAUNA LOCAL (AMBIENTE 3D A-FRAME)
+   1. FUNÇÃO DA FAUNA LOCAL (ATUALIZADA PARA O NOVO JSON)
    ========================================================= */
 async function carregarAnimalFauna(id, container, loading) {
   try {
-    // Busca os dados do arquivo JSON local
     const resposta = await fetch('fauna_pe.json');
-    if (!resposta.ok) throw new Error('Arquivo fauna_pe.json não encontrado');
+    if (!resposta.ok) throw new Error('Ficheiro fauna_pe.json não encontrado');
     
     const baseDados = await resposta.json();
-    const animal = baseDados[id];
+    
+    const numeroIndex = parseInt(id.replace('pe-', ''), 10) - 1;
+    const animal = baseDados.especies_ameacadas[numeroIndex];
 
     if (!animal) {
-        throw new Error('Animal não encontrado no banco de dados local.');
+        throw new Error('Animal não encontrado na lista do banco de dados.');
     }
 
     loading.style.display = 'none';
 
-    // Injeta o HTML do A-Frame e os dados do animal
+    const modeloPath = animal.modelo_gltf || "assets/modelo/animais.glb";
+    const cenarioPath = animal.cenario_fundo || "assets/ambiente/ambiente.jpg";
+    const escala3d = animal.escala || "0.1";
+
+    const habitatTexto = Array.isArray(animal.habitat) ? animal.habitat.join(', ') : animal.habitat;
+    const ameacasTexto = Array.isArray(animal.principais_ameacas) ? animal.principais_ameacas.join('; ') : animal.principais_ameacas;
+
     container.innerHTML = `
       <div class="detalhes-layout">
         <div class="col-esquerda">
           
-          <!-- Tela do Ambiente Virtual 3D -->
+          <!-- 1. TELA 3D NO TOPO -->
           <div class="screen ambiente-virtual" style="position: relative; overflow: hidden; border-radius: 15px; padding: 0;">
             <a-scene embedded style="width: 100%; height: 350px;" vr-mode-ui="enabled: false">
               <a-assets>
-                <a-asset-item id="modelo3d" src="${animal.modelo_gltf}"></a-asset-item>
-                <img id="fundo-bioma" src="${animal.cenario_fundo}">
+                <a-asset-item id="modelo3d" src="${modeloPath}"></a-asset-item>
+                <img id="fundo-bioma" src="${cenarioPath}">
               </a-assets>
 
-              <!-- Cenário 360 do Bioma -->
               <a-sky src="#fundo-bioma"></a-sky>
+              <a-light type="ambient" color="#ffffff" intensity="1.5"></a-light>
+              <a-light type="directional" position="2 4 2" intensity="1.2"></a-light>
 
-              <!-- Modelo 3D girando -->
-              <a-gltf-model src="#modelo3d" position="0 1 -3" scale="${animal.escala || 1} ${animal.escala || 1} ${animal.escala || 1}" animation="property: rotation; to: 0 360 0; loop: true; dur: 10000"></a-gltf-model>
+              <a-gltf-model 
+                src="#modelo3d" 
+                position="0 -1.2 -4" 
+                scale="${escala3d} ${escala3d} ${escala3d}" 
+                animation="property: rotation; to: 0 360 0; loop: true; dur: 12000">
+              </a-gltf-model>
 
-              <a-light type="ambient" color="#ffffff" intensity="0.9"></a-light>
-              <a-entity camera look-controls></a-entity>
+              <a-entity camera look-controls position="0 1.6 0"></a-entity>
             </a-scene>
-
-            <!-- Botão da Inteligência Artificial / Missão -->
-            <button id="btn-missao" class="shiny-btn" style="position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); z-index: 999; font-weight: bold; font-size: 14px;">
-              🔬 Iniciar Missão Ecológica
-            </button>
           </div>
 
-          <!-- Bloco de Identidade do Animal -->
-          <div class="screen screen-identidade" style="margin-top: 15px;">
-            <div class="numero-grande">${id.toUpperCase()}</div>
-            <h2>${animal.nome}</h2>
-            <div class="tipos"><span class="tipo" style="background: #3fb950; text-transform: uppercase;">${animal.bioma}</span></div>
-            <p style="color: #ff4d4d; font-weight: bold; margin-top: 10px; font-size: 14px;">⚠️ Status: ${animal.ameaca}</p>
+          <!-- 2. NOME DO ANIMAL E BOTÃO (EXATAMENTE ONDE VOCÊ CIRCULOU) -->
+          <div style="display: flex; gap: 15px; margin-top: 15px; align-items: stretch; justify-content: space-between;">
+            
+            <!-- Cartão de Identidade (Esquerda) -->
+            <div class="screen screen-identidade" style="flex: 1; margin: 0; display: flex; flex-direction: column; justify-content: center;">
+              <div class="numero-grande">${id.toUpperCase()}</div>
+              <h2>${animal.nome_popular}</h2>
+              <p style="font-style: italic; color: #8b949e; margin-bottom: 6px; font-size: 13px;">${animal.nome_cientifico}</p>
+              <div class="tipos"><span class="tipo" style="background: #3fb950; text-transform: uppercase;">${animal.classe}</span></div>
+              <p style="color: #ff4d4d; font-weight: bold; margin-top: 8px; font-size: 13px;">⚠️ Status: ${animal.situacao}</p>
+            </div>
+
+            <!-- Botão da Missão Isolado de CSS Antigo -->
+            <button id="btn-missao-novo" style="flex: 1; margin: 0; position: relative !important; top: auto !important; left: auto !important; transform: none !important; padding: 10px; font-weight: bold; font-size: 14px; cursor: pointer; border-radius: 12px; background: linear-gradient(135deg, #238636, #2ea043); color: white; border: 2px solid #3fb950; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; flex-direction: column; text-align: center;">
+              <span style="font-size: 24px; margin-bottom: 8px;">🔬</span>
+              INICIAR MISSÃO<br>ECOLÓGICA
+            </button>
           </div>
         </div>
         
+        <!-- COLUNA DA DIREITA -->
         <div class="col-direita">
           <div class="screen info-bloco">
-             <h3>▸ Descrição Biológica</h3>
-             <p style="line-height: 1.6; font-size: 14px; margin-top: 10px;">${animal.descricao}</p>
+             <h3>▸ Comportamento e Características</h3>
+             <p style="line-height: 1.5; font-size: 13px; margin-top: 8px;">${animal.caracteristicas.comportamento}</p>
+             <p style="line-height: 1.5; font-size: 13px; margin-top: 6px;"><strong>Coloração:</strong> ${animal.caracteristicas.coloracao}</p>
           </div>
           
           <div class="screen info-bloco">
-            <h3>▸ Dados Ecológicos</h3>
-            <div class="fisico" style="margin-top: 10px;">
-              <div class="item"><div class="label">Reino</div><div class="valor">Animalia</div></div>
-              <div class="item"><div class="label">Ocorrência</div><div class="valor">Pernambuco</div></div>
+            <h3>▸ Dados Biológicos</h3>
+            <div class="fisico" style="margin-top: 8px;">
+              <div class="item"><div class="label">Habitat</div><div class="valor" style="font-size:12px;">${habitatTexto}</div></div>
+              <div class="item"><div class="label">Tamanho</div><div class="valor" style="font-size:12px;">${animal.caracteristicas.tamanho}</div></div>
             </div>
+            <p style="line-height: 1.4; font-size: 12px; margin-top: 10px; color: #ff8c8c;"><strong>Principais Ameaças:</strong> ${ameacasTexto}</p>
           </div>
         </div>
       </div>
     `;
 
-    document.title = `${animal.nome} — FaunaDex`;
+    document.title = `${animal.nome_popular} — Projeto Mew`;
 
-    // Conecta o botão de missão
-    document.getElementById('btn-missao').addEventListener('click', () => {
+    document.getElementById('btn-missao-novo').addEventListener('click', () => {
         alert("Em breve: Integração C++ / WebAssembly para o Quiz Adaptativo!");
     });
 
   } catch (erro) {
     loading.style.display = 'none';
-    container.innerHTML = '<p class="loading">Erro ao carregar o animal da fauna. Verifique os arquivos 3D e o JSON.</p>';
+    container.innerHTML = '<p class="loading">Erro ao carregar o animal da fauna. Verifique o ficheiro JSON e os ativos 3D.</p>';
     console.error('Erro:', erro);
   }
 }
-
-
 /* =========================================================
    2. FUNÇÃO ORIGINAL (POKEAPI CLÁSSICA)
    ========================================================= */
