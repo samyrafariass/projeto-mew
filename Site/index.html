@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pokédex — Todas as Gerações</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="pokedex-frame">
+    <div class="pokedex-top">
+      <div class="light-big"></div>
+      <div class="lights-small">
+        <span class="light-small red"></span>
+        <span class="light-small yellow"></span>
+        <span class="light-small green"></span>
+      </div>
+    </div>
+
+    <h1 class="pokedex-title">Pokédex</h1>
+
+    <div class="pokedex-main">
+      <div class="abas">
+        <button class="aba ativa" data-aba="pokedex">
+          <span class="aba-icone">📕</span>
+          <span>Pokédex</span>
+        </button>
+        <button class="aba" data-aba="mapa">
+          <span class="aba-icone">🗺️</span>
+          <span>Mapa</span>
+        </button>
+        <button class="aba" data-aba="itens">
+          <span class="aba-icone">🎒</span>
+          <span>Itens</span>
+        </button>
+        <button class="aba" data-aba="cartas">
+          <span class="aba-icone">🎴</span>
+          <span>Cartas</span>
+        </button>
+        <button class="aba" data-aba="deck">
+          <span class="aba-icone">🎲</span>
+          <span>Deck</span>
+        </button>
+      </div>
+
+      <!-- Painel: Pokédex -->
+      <div class="painel ativo" id="painel-pokedex">
+        <div class="filtros-container">
+          <div class="filtro-grupo">
+            <label>Buscar por nome</label>
+            <input type="text" id="filtro-busca" placeholder="Ex: pikachu, charmander...">
+          </div>
+          <div class="filtro-grupo">
+            <label>Geração</label>
+            <select id="filtro-geracao">
+              <option value="">Todas</option>
+            </select>
+          </div>
+          <div class="filtro-grupo">
+            <label>Tipo</label>
+            <select id="filtro-tipo">
+              <option value="">Todos</option>
+            </select>
+          </div>
+          <div class="filtro-grupo">
+            <label>Número</label>
+            <input type="number" id="filtro-numero" placeholder="Ex: 25" min="1" max="1025">
+          </div>
+        </div>
+
+        <div id="loading" class="loading">Carregando Pokémon...</div>
+        <div id="pokemon-grid" class="pokemon-grid"></div>
+      </div>
+
+      <!-- Painel: Mapa -->
+      <div class="painel" id="painel-mapa">
+        <div class="mapa-mundi-wrap">
+          <h2 class="mapa-mundi-titulo">▸ Mapa do Mundo Pokémon</h2>
+          <p class="mapa-mundi-desc">
+            Clique em uma região abaixo para ver o mapa ampliado e detalhado.
+          </p>
+          <div class="mapa-mundi-imagem">
+            <img src="mapa-mundo.png" alt="Mapa do mundo Pokémon" class="mapa-mundi-img">
+          </div>
+        </div>
+
+        <h2 class="regioes-titulo">▸ Regiões</h2>
+        <div class="regioes-grid" id="regioes-grid"></div>
+      </div>
+
+      <!-- Painel: Itens -->
+      <div class="painel" id="painel-itens">
+        <div class="filtros-container itens-filtros">
+          <div class="filtro-grupo filtro-grupo-largo">
+            <label>Buscar item</label>
+            <input type="text" id="filtro-item-busca" placeholder="Ex: leftovers, choice band, oran berry...">
+          </div>
+          <div class="filtro-grupo">
+            <label>Ordenar</label>
+            <select id="filtro-item-ordem">
+              <option value="az">A → Z</option>
+              <option value="za">Z → A</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="loading-itens" class="loading">Carregando itens...</div>
+        <div id="itens-grid" class="itens-grid"></div>
+      </div>
+
+      <!-- Painel: Cartas -->
+      <div class="painel" id="painel-cartas">
+        <div class="filtros-container itens-filtros">
+          <div class="filtro-grupo filtro-grupo-largo">
+            <label>Buscar carta</label>
+            <input type="text" id="filtro-carta-busca" placeholder="Ex: pikachu, charizard, mewtwo...">
+          </div>
+          <div class="filtro-grupo">
+            <label>Filtrar</label>
+            <select id="filtro-carta-raridade">
+              <option value="todas">Todas as cartas</option>
+              <option value="comuns">Apenas comuns</option>
+              <option value="lendarias">Apenas lendárias</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="loading-cartas" class="loading">Carregando cartas...</div>
+        <div class="cartas-grid" id="cartas-grid"></div>
+      </div>
+
+      <!-- Painel: Deck -->
+      <div class="painel" id="painel-deck">
+        <div class="deck-controles">
+          <button id="btn-sortear-deck" class="btn-sortear-deck" type="button">
+            🎲 Sortear Deck
+          </button>
+          <button id="btn-limpar-deck" class="btn-limpar-deck" type="button">
+            ✕ Limpar
+          </button>
+
+          <div class="filtro-grupo deck-filtro-grupo">
+            <label>Geração</label>
+            <select id="deck-geracao">
+              <option value="">Todas as gerações</option>
+            </select>
+          </div>
+
+          <div class="deck-controles-info">
+            <span class="deck-controles-regra">
+              ✓ Só formas base/únicas · Máx. 1 lendário
+            </span>
+          </div>
+        </div>
+
+        <div id="deck-info" class="deck-info"></div>
+        <div id="deck-grid" class="deck-grid"></div>
+      </div>
+    </div>
+
+    <div class="rodape">
+      Dados fornecidos pela <a href="https://pokeapi.co/" target="_blank">PokeAPI</a>
+    </div>
+  </div>
+
+  <div id="modal-regiao-container"></div>
+  <div id="modal-item-container"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>

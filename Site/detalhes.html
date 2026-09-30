@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detalhes do Pokémon</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Importação do A-Frame para renderização 3D -->
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+</head>
+<body>
+  <div class="pokedex-frame">
+    <div class="pokedex-top">
+      <div class="light-big"></div>
+      <div class="lights-small">
+        <span class="light-small red"></span>
+        <span class="light-small yellow"></span>
+        <span class="light-small green"></span>
+      </div>
+      <a href="index.html" class="voltar">← Voltar</a>
+    </div>
+
+    <h1 class="pokedex-title">Pokédex</h1>
+
+    <div class="pokedex-main">
+      <div id="detalhes-container">
+        <div id="loading-detalhes" class="loading">Carregando detalhes...</div>
+      </div>
+    </div>
+
+    <div class="rodape">
+      Dados fornecidos pela <a href="https://pokeapi.co/" target="_blank">PokeAPI</a>
+    </div>
+  </div>
+
+  <div id="modal-container"></div>
+
+  <script src="detalhes.js"></script>
+</body>
+</html>
