@@ -25,6 +25,10 @@
           <span class="aba-icone">📕</span>
           <span>Pokédex</span>
         </button>
+        <button class="aba" data-aba="mewdex">
+          <span class="aba-icone">🌿</span>
+          <span>Mewdex</span>
+        </button>
         <button class="aba" data-aba="mapa">
           <span class="aba-icone">🗺️</span>
           <span>Mapa</span>
@@ -43,7 +47,6 @@
         </button>
       </div>
 
-      <!-- Painel: Pokédex -->
       <div class="painel ativo" id="painel-pokedex">
         <div class="filtros-container">
           <div class="filtro-grupo">
@@ -72,7 +75,34 @@
         <div id="pokemon-grid" class="pokemon-grid"></div>
       </div>
 
-      <!-- Painel: Mapa -->
+      <div class="painel" id="painel-mewdex">
+        <div class="filtros-container mewdex-filtros">
+          <div class="filtro-grupo">
+            <label>Buscar por nome</label>
+            <input type="text" id="filtro-mewdex-busca" placeholder="Ex: tamanduá, jaguatirica, Trichechus...">
+          </div>
+          <div class="filtro-grupo">
+            <label>Classe</label>
+            <select id="filtro-mewdex-classe">
+              <option value="">Todas</option>
+            </select>
+          </div>
+          <div class="filtro-grupo">
+            <label>Status</label>
+            <select id="filtro-mewdex-status">
+              <option value="">Todos</option>
+            </select>
+          </div>
+          <div class="filtro-grupo">
+            <label>Número</label>
+            <input type="number" id="filtro-mewdex-numero" placeholder="Ex: 1" min="1">
+          </div>
+        </div>
+
+        <div id="loading-mewdex" class="loading">Carregando fauna pernambucana...</div>
+        <div id="mewdex-grid" class="mewdex-grid"></div>
+      </div>
+
       <div class="painel" id="painel-mapa">
         <div class="mapa-mundi-wrap">
           <h2 class="mapa-mundi-titulo">▸ Mapa do Mundo Pokémon</h2>
@@ -88,7 +118,6 @@
         <div class="regioes-grid" id="regioes-grid"></div>
       </div>
 
-      <!-- Painel: Itens -->
       <div class="painel" id="painel-itens">
         <div class="filtros-container itens-filtros">
           <div class="filtro-grupo filtro-grupo-largo">
@@ -108,7 +137,6 @@
         <div id="itens-grid" class="itens-grid"></div>
       </div>
 
-      <!-- Painel: Cartas -->
       <div class="painel" id="painel-cartas">
         <div class="filtros-container itens-filtros">
           <div class="filtro-grupo filtro-grupo-largo">
@@ -129,14 +157,29 @@
         <div class="cartas-grid" id="cartas-grid"></div>
       </div>
 
-      <!-- Painel: Deck -->
       <div class="painel" id="painel-deck">
+        <div class="deck-header">
+          <div class="deck-header-titulo">
+            <span class="deck-header-icone">🎲</span>
+            <div>
+              <h2>Construtor de Deck</h2>
+              <p class="deck-header-sub">Monte uma equipe de 6 Pokémon para batalhas</p>
+            </div>
+          </div>
+        </div>
+
         <div class="deck-controles">
           <button id="btn-sortear-deck" class="btn-sortear-deck" type="button">
-            🎲 Sortear Deck
+            <span class="btn-icone">🎲</span>
+            <span>Sortear Deck</span>
           </button>
           <button id="btn-limpar-deck" class="btn-limpar-deck" type="button">
-            ✕ Limpar
+            <span class="btn-icone">✕</span>
+            <span>Limpar</span>
+          </button>
+          <button id="btn-rolar-dado" class="btn-rolar-dado" type="button" title="Rolar dados d6">
+            <span class="btn-icone">🎲</span>
+            <span>Rolar Dado</span>
           </button>
 
           <div class="filtro-grupo deck-filtro-grupo">

@@ -22,31 +22,19 @@ const NOMES_TIPOS = {
 
 const CLASSES_DANO = { physical: 'Físico', special: 'Especial', status: 'Status' };
 
-/* =========================================================
-   MAPEAMENTO: VERSÃO DO JOGO → GERAÇÃO
-   ========================================================= */
 const VERSAO_PARA_GERACAO = {
-  // Gen 1
   'red': 1, 'blue': 1, 'yellow': 1, 'green': 1,
-  // Gen 2
   'gold': 2, 'silver': 2, 'crystal': 2,
-  // Gen 3
   'ruby': 3, 'sapphire': 3, 'emerald': 3,
   'firered': 3, 'leafgreen': 3, 'colosseum': 3, 'xd': 3,
-  // Gen 4
   'diamond': 4, 'pearl': 4, 'platinum': 4,
   'heartgold': 4, 'soulsilver': 4,
-  // Gen 5
   'black': 5, 'white': 5, 'black-2': 5, 'white-2': 5,
-  // Gen 6
   'x': 6, 'y': 6, 'omega-ruby': 6, 'alpha-sapphire': 6,
-  // Gen 7
   'sun': 7, 'moon': 7, 'ultra-sun': 7, 'ultra-moon': 7,
   'lets-go-pikachu': 7, 'lets-go-eevee': 7,
-  // Gen 8
   'sword': 8, 'shield': 8,
   'brilliant-diamond': 8, 'shining-pearl': 8, 'legends-arceus': 8,
-  // Gen 9
   'scarlet': 9, 'violet': 9
 };
 
@@ -55,9 +43,6 @@ const NOME_GERACAO = {
   6: 'Kalos', 7: 'Alola', 8: 'Galar', 9: 'Paldea'
 };
 
-/* =========================================================
-   REGIÕES
-   ========================================================= */
 const REGIOES = {
   1: { nome: 'Kanto',  inicio: 1,   fim: 151,  zoom: 550, posicaoX: 67, posicaoY: 44 },
   2: { nome: 'Johto',  inicio: 152, fim: 251,  zoom: 550, posicaoX: 50, posicaoY: 45 },
@@ -84,9 +69,6 @@ function obterRegiao(pokemonId) {
   return null;
 }
 
-/* =========================================================
-   COORDENADAS DAS ROTAS DE KANTO
-   ========================================================= */
 const COORDENADAS_KANTO = {
   'kanto-route-1':  { x: 19,  y: 78 }, 'kanto-route-2':  { x: 22,  y: 50 },
   'kanto-route-3':  { x: 32,  y: 19 }, 'kanto-route-4':  { x: 47,  y: 19 },
@@ -180,9 +162,6 @@ function obterLabel(nomeArea) {
   return ABREVIACOES[chave] || '•';
 }
 
-/* =========================================================
-   DICIONÁRIO DE HABILIDADES
-   ========================================================= */
 const DESCRICOES_HABILIDADES = {
   'overgrow': 'Quando o HP está baixo, os movimentos do tipo Planta ficam mais fortes.',
   'chlorophyll': 'Sob luz solar intensa, a Velocidade é dobrada.',
@@ -337,9 +316,6 @@ const DESCRICOES_HABILIDADES = {
   'ball-fetch': 'Pega a bola e aumenta a Velocidade.'
 };
 
-/* =========================================================
-   UTILITÁRIOS
-   ========================================================= */
 function capitalizar(texto) {
   return texto.replace(/-/g, ' ').split(' ').map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(' ');
 }
@@ -356,9 +332,6 @@ async function buscarDescricaoHabilidade(nomeOriginal) {
   return 'Descrição não disponível.';
 }
 
-/* =========================================================
-   BUSCAR DESCRIÇÕES DA POKÉDEX POR GERAÇÃO
-   ========================================================= */
 async function buscarDescricaoPokedex(pokemonId) {
   try {
     const res = await fetch(`${SPECIES_URL}/${pokemonId}`);
@@ -367,10 +340,8 @@ async function buscarDescricaoPokedex(pokemonId) {
 
     const genero = data.genera?.find(g => g.language.name === 'pt' || g.language.name === 'en')?.genus || null;
 
-    // Idiomas em ordem de prioridade
     const prioridadeIdioma = { 'pt': 0, 'pt-BR': 0, 'en': 1, 'es': 2, 'ja': 3 };
 
-    // Agrupa por geração — pega o idioma de maior prioridade por geração
     const porGeracao = {};
 
     data.flavor_text_entries.forEach(entry => {
@@ -396,7 +367,6 @@ async function buscarDescricaoPokedex(pokemonId) {
       }
     });
 
-    // Converte em array ordenado por geração
     const descricoes = Object.entries(porGeracao)
       .map(([gen, d]) => ({
         geracao: parseInt(gen),
@@ -414,9 +384,6 @@ async function buscarDescricaoPokedex(pokemonId) {
   }
 }
 
-/* =========================================================
-   MODAL DE HABILIDADE
-   ========================================================= */
 function abrirModalHabilidade(nomeOriginal, nomeBonito) {
   const container = document.getElementById('modal-container');
   container.innerHTML = `
@@ -446,9 +413,6 @@ function fecharModal() {
 
 function escutarEsc(e) { if (e.key === 'Escape') fecharModal(); }
 
-/* =========================================================
-   TOCAR GRITO
-   ========================================================= */
 function tocarGrito(pokemonId) {
   const audio = new Audio(`${CRY_URL}/${pokemonId}.ogg`);
   audio.volume = 0.5;
@@ -459,9 +423,6 @@ function tocarGrito(pokemonId) {
   });
 }
 
-/* =========================================================
-   SOM DO SHINY
-   ========================================================= */
 function tocarSparkleShiny() {
   try {
     const AudioContexto = window.AudioContext || window.webkitAudioContext;
@@ -526,9 +487,6 @@ function tocarSparkleShiny() {
   }
 }
 
-/* =========================================================
-   ALTERNAR SHINY
-   ========================================================= */
 function alternarShiny(imgElement, sprites, botao) {
   const estaShiny = imgElement.dataset.shiny === 'true';
   const novoEstado = !estaShiny;
@@ -552,9 +510,6 @@ function alternarShiny(imgElement, sprites, botao) {
   if (novoEstado) tocarSparkleShiny();
 }
 
-/* =========================================================
-   BUSCAR MOVIMENTOS
-   ========================================================= */
 async function buscarMovimentos(pokemon) {
   const porNivel = [];
   const porTM = [];
@@ -620,9 +575,6 @@ async function buscarMovimentos(pokemon) {
   };
 }
 
-/* =========================================================
-   RENDERIZAR LISTA DE MOVIMENTOS
-   ========================================================= */
 function renderizarListaMovimentos(movimentos, tipo) {
   if (!movimentos || movimentos.length === 0) return '';
 
@@ -650,9 +602,6 @@ function renderizarListaMovimentos(movimentos, tipo) {
   return `<div class="moves-list">${linhas}</div>`;
 }
 
-/* =========================================================
-   BUSCAR ROTAS
-   ========================================================= */
 async function buscarRotas(pokemonId, geracaoAtual) {
   try {
     const res = await fetch(`${ENCOUNTER_URL}/${pokemonId}/encounters`);
@@ -678,9 +627,6 @@ async function buscarRotas(pokemonId, geracaoAtual) {
   }
 }
 
-/* =========================================================
-   RENDERIZAR DESCRIÇÕES POR GERAÇÃO
-   ========================================================= */
 function renderizarDescricoes(descricao) {
   if (!descricao || descricao.descricoes.length === 0) {
     return `
@@ -731,9 +677,6 @@ function renderizarDescricoes(descricao) {
   `;
 }
 
-/* =========================================================
-   MAPA DINÂMICO + DESCRIÇÃO
-   ========================================================= */
 function renderizarMapa(rotas, regiao, descricao) {
   const listaRotas = rotas.length > 0
     ? rotas.map(r => {
@@ -783,9 +726,6 @@ function renderizarMapa(rotas, regiao, descricao) {
   `;
 }
 
-/* =========================================================
-   FUNÇÃO PRINCIPAL (ROTEADOR)
-   ========================================================= */
 async function carregarDetalhes() {
   const container = document.getElementById('detalhes-container');
   const loading = document.getElementById('loading-detalhes');
@@ -799,32 +739,25 @@ async function carregarDetalhes() {
     return;
   }
 
-  // LÓGICA DE INTERCEPTAÇÃO (PROJETO MEW)
   if (id.startsWith('pe-')) {
-    // Se tiver o prefixo "pe-", carrega o 3D da fauna local
     await carregarAnimalFauna(id, container, loading);
   } else {
-    // Caso contrário, roda o seu código original da PokeAPI
     await carregarPokemonClassico(id, container, loading);
   }
 }
 
-
-/* =========================================================
-   1. FUNÇÃO DA FAUNA LOCAL (ATUALIZADA PARA O NOVO JSON)
-   ========================================================= */
 async function carregarAnimalFauna(id, container, loading) {
   try {
     const resposta = await fetch('fauna_pe.json');
     if (!resposta.ok) throw new Error('Ficheiro fauna_pe.json não encontrado');
-    
+
     const baseDados = await resposta.json();
-    
+
     const numeroIndex = parseInt(id.replace('pe-', ''), 10) - 1;
     const animal = baseDados.especies_ameacadas[numeroIndex];
 
     if (!animal) {
-        throw new Error('Animal não encontrado na lista do banco de dados.');
+      throw new Error('Animal não encontrado na lista do banco de dados.');
     }
 
     loading.style.display = 'none';
@@ -839,8 +772,7 @@ async function carregarAnimalFauna(id, container, loading) {
     container.innerHTML = `
       <div class="detalhes-layout">
         <div class="col-esquerda">
-          
-          <!-- 1. TELA 3D NO TOPO -->
+
           <div class="screen ambiente-virtual" style="position: relative; overflow: hidden; border-radius: 15px; padding: 0;">
             <a-scene embedded style="width: 100%; height: 350px;" vr-mode-ui="enabled: false">
               <a-assets>
@@ -852,10 +784,10 @@ async function carregarAnimalFauna(id, container, loading) {
               <a-light type="ambient" color="#ffffff" intensity="1.5"></a-light>
               <a-light type="directional" position="2 4 2" intensity="1.2"></a-light>
 
-              <a-gltf-model 
-                src="#modelo3d" 
-                position="0 -1.2 -4" 
-                scale="${escala3d} ${escala3d} ${escala3d}" 
+              <a-gltf-model
+                src="#modelo3d"
+                position="0 -1.2 -4"
+                scale="${escala3d} ${escala3d} ${escala3d}"
                 animation="property: rotation; to: 0 360 0; loop: true; dur: 12000">
               </a-gltf-model>
 
@@ -863,10 +795,8 @@ async function carregarAnimalFauna(id, container, loading) {
             </a-scene>
           </div>
 
-          <!-- 2. NOME DO ANIMAL E BOTÃO (EXATAMENTE ONDE VOCÊ CIRCULOU) -->
           <div style="display: flex; gap: 15px; margin-top: 15px; align-items: stretch; justify-content: space-between;">
-            
-            <!-- Cartão de Identidade (Esquerda) -->
+
             <div class="screen screen-identidade" style="flex: 1; margin: 0; display: flex; flex-direction: column; justify-content: center;">
               <div class="numero-grande">${id.toUpperCase()}</div>
               <h2>${animal.nome_popular}</h2>
@@ -875,22 +805,20 @@ async function carregarAnimalFauna(id, container, loading) {
               <p style="color: #ff4d4d; font-weight: bold; margin-top: 8px; font-size: 13px;">⚠️ Status: ${animal.situacao}</p>
             </div>
 
-            <!-- Botão da Missão Isolado de CSS Antigo -->
             <button id="btn-missao-novo" style="flex: 1; margin: 0; position: relative !important; top: auto !important; left: auto !important; transform: none !important; padding: 10px; font-weight: bold; font-size: 14px; cursor: pointer; border-radius: 12px; background: linear-gradient(135deg, #238636, #2ea043); color: white; border: 2px solid #3fb950; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; flex-direction: column; text-align: center;">
               <span style="font-size: 24px; margin-bottom: 8px;">🔬</span>
               INICIAR MISSÃO<br>ECOLÓGICA
             </button>
           </div>
         </div>
-        
-        <!-- COLUNA DA DIREITA -->
+
         <div class="col-direita">
           <div class="screen info-bloco">
              <h3>▸ Comportamento e Características</h3>
              <p style="line-height: 1.5; font-size: 13px; margin-top: 8px;">${animal.caracteristicas.comportamento}</p>
              <p style="line-height: 1.5; font-size: 13px; margin-top: 6px;"><strong>Coloração:</strong> ${animal.caracteristicas.coloracao}</p>
           </div>
-          
+
           <div class="screen info-bloco">
             <h3>▸ Dados Biológicos</h3>
             <div class="fisico" style="margin-top: 8px;">
@@ -915,9 +843,7 @@ async function carregarAnimalFauna(id, container, loading) {
     console.error('Erro:', erro);
   }
 }
-/* =========================================================
-   2. FUNÇÃO ORIGINAL (POKEAPI CLÁSSICA)
-   ========================================================= */
+
 async function carregarPokemonClassico(id, container, loading) {
   try {
     const resposta = await fetch(`${API_URL}/${id}`);
@@ -985,15 +911,18 @@ async function carregarPokemonClassico(id, container, loading) {
     container.innerHTML = `
       <div class="detalhes-layout">
         <div class="col-esquerda">
-          <div class="screen screen-imagem" id="screen-imagem" title="Clique para ouvir o grito">
-            <img
-              src="${imagem}"
-              alt="${nome}"
-              id="imagem-pokemon"
-              data-shiny="false"
-              onerror="this.onerror=null; this.src='${fallback}';"
-            >
-            <span class="som-icone">🔊</span>
+          <div class="screen screen-imagem" id="screen-imagem">
+            <a href="visualizar3d.html?id=${pokemon.id}&nome=${encodeURIComponent(nome)}" class="link-3d" title="Clique para ver em 3D">
+              <img
+                src="${imagem}"
+                alt="${nome}"
+                id="imagem-pokemon"
+                data-shiny="false"
+                onerror="this.onerror=null; this.src='${fallback}';"
+              >
+              <span class="badge-3d">🧊 Ver em 3D</span>
+            </a>
+            <span class="som-icone" id="som-icone" title="Ouvir grito">🔊</span>
             ${botaoShinyHTML}
           </div>
 
@@ -1053,8 +982,9 @@ async function carregarPokemonClassico(id, container, loading) {
 
     document.title = `${nome} — Pokédex`;
 
-    document.getElementById('screen-imagem').addEventListener('click', (e) => {
-      if (e.target.closest('#shiny-btn')) return;
+    document.getElementById('som-icone').addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       tocarGrito(pokemon.id);
     });
 
@@ -1063,6 +993,7 @@ async function carregarPokemonClassico(id, container, loading) {
       const img = document.getElementById('imagem-pokemon');
 
       botao.addEventListener('click', (e) => {
+        e.preventDefault();
         e.stopPropagation();
         alternarShiny(img, {
           normalArtwork: normalArtwork,

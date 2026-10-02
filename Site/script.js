@@ -701,6 +701,36 @@ let ordemItensAtual = 'az';
 
 let cartasLoadPromise = null;
 
+/* =========================================================
+   MEWDEX — FAUNA PERNAMBUCANA (fauna_pe.json)
+   ========================================================= */
+const FAUNA_URL = 'fauna_pe.json';
+let faunaMewdex = [];
+let faunaCarregada = false;
+
+const EMOJIS_CLASSE_ANIMAL = {
+  'mamíferos': '🐘',
+  'aves': '🦜',
+  'répteis': '🦎',
+  'anfíbios': '🐸',
+  'peixes': '🐟',
+  'insetos': '🦋'
+};
+
+const EMOJIS_ANIMAL = {
+  'peixe-boi': '🦭',
+  'tamanduá': '🐻',
+  'tatu': '🦔',
+  'saíra': '🦜',
+  'pintor-verdadeiro': '🦜',
+  'limpa-folha': '🐦',
+  'gato-maracajá': '🐆',
+  'jaguatirica': '🐆',
+  'tartaruga-de-pente': '🐢',
+  'tartaruga-de-couro': '🐢',
+  'galo-de-campina': '🐦'
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   carregarDictTrad();
   carregarCacheDetalhes();
@@ -709,10 +739,12 @@ document.addEventListener('DOMContentLoaded', () => {
   renderizarRegioes();
   renderizarHotspotsMapa();
   configurarFiltros();
+  configurarFiltrosMewdex();
   configurarFiltrosItens();
   criarBotaoIdioma();
   criarBotaoRegras();
   carregarPokemon();
+  carregarMewdex();
   carregarItens();
   configurarFiltrosCartas();
   configurarDeck();
@@ -985,56 +1017,321 @@ function injetarEstilos() {
       color: #ef5350;
       text-shadow: 0 0 4px rgba(239, 83, 80, 0.5);
     }
-    .deck-card { cursor: pointer; }
-    .deck-card-ver {
-      position: relative; z-index: 2;
-      margin-top: 0.3rem;
-      text-align: center;
+    .btn-rolar-dado {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 0.5rem; padding: 0.75rem 1.3rem;
+      background: linear-gradient(135deg, rgba(255, 203, 5, 0.25), rgba(255, 152, 0, 0.1));
+      border: 2px solid #ffcb05;
+      color: #ffcb05; border-radius: 10px;
       font-family: 'Courier New', monospace;
-      font-size: 0.55rem;
-      font-weight: bold;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      color: #00e0ff;
-      padding: 0.18rem 0.4rem;
-      background: rgba(0, 224, 255, 0.08);
-      border: 1px solid rgba(0, 224, 255, 0.35);
-      border-radius: 5px;
-      text-shadow: 0 0 5px rgba(0, 224, 255, 0.5);
-      transition: all 0.2s;
+      font-size: 0.9rem; font-weight: bold;
+      letter-spacing: 2px; text-transform: uppercase;
+      cursor: pointer; transition: all 0.25s;
+      box-shadow: 0 0 18px rgba(255, 203, 5, 0.35), inset 0 0 12px rgba(255, 203, 5, 0.15);
+      text-shadow: 0 0 8px rgba(255, 203, 5, 0.5);
     }
-    .deck-card:hover .deck-card-ver {
-      background: rgba(0, 224, 255, 0.2);
-      border-color: #00e0ff;
+    .btn-rolar-dado:hover {
+      background: linear-gradient(135deg, rgba(255, 203, 5, 0.4), rgba(255, 152, 0, 0.2));
+      box-shadow: 0 0 28px rgba(255, 203, 5, 0.6), inset 0 0 16px rgba(255, 203, 5, 0.25);
+      transform: translateY(-2px);
     }
-    .modal-carta-deck-box {
+    .modal-dado-box {
       background: linear-gradient(135deg, #0a1628 0%, #051020 100%);
-      border: 3px solid #00e0ff;
+      border: 3px solid #ffcb05;
       border-radius: 16px;
-      padding: 1.2rem;
-      max-width: 640px;
+      padding: 1.8rem 1.4rem;
+      max-width: 480px;
       width: 100%;
-      max-height: 94vh;
-      overflow-y: auto;
-      box-shadow: 0 0 60px rgba(0, 224, 255, 0.55), inset 0 0 40px rgba(0, 0, 0, 0.7);
+      box-shadow: 0 0 60px rgba(255, 203, 5, 0.5), inset 0 0 40px rgba(0, 0, 0, 0.7);
       position: relative;
       animation: modalPop 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2);
-    }
-    .modal-carta-deck-box .carta-pokemon {
-      border: none;
-      background: transparent;
-      box-shadow: none;
-      padding: 0;
-      transform: none !important;
-    }
-    .modal-carta-deck-rodape {
-      margin-top: 0.8rem;
-      padding-top: 0.8rem;
-      border-top: 1px dashed rgba(0, 224, 255, 0.25);
       text-align: center;
     }
+    .modal-dado-titulo {
+      color: #ffcb05;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      font-family: 'Courier New', monospace;
+      margin: 0 0 1.2rem 0;
+      padding-bottom: 0.6rem;
+      border-bottom: 2px dashed rgba(255, 203, 5, 0.35);
+      text-shadow: 0 0 12px rgba(255, 203, 5, 0.6);
+    }
+    .dado-opcoes {
+      display: flex; gap: 0.8rem; justify-content: center;
+      margin-bottom: 1rem;
+    }
+    .dado-btn {
+      flex: 1; max-width: 160px;
+      display: flex; flex-direction: column; align-items: center; gap: 0.3rem;
+      padding: 0.9rem 0.6rem;
+      background: rgba(0, 224, 255, 0.05);
+      border: 2px solid rgba(0, 224, 255, 0.35);
+      border-radius: 10px;
+      color: #d0f4ff;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.25s;
+      letter-spacing: 1px;
+    }
+    .dado-btn:hover, .dado-btn.ativo {
+      background: rgba(0, 224, 255, 0.15);
+      border-color: #00e0ff;
+      box-shadow: 0 0 16px rgba(0, 224, 255, 0.5);
+      transform: translateY(-2px);
+    }
+    .dado-btn.ativo {
+      border-color: #ffcb05;
+      background: rgba(255, 203, 5, 0.12);
+      box-shadow: 0 0 16px rgba(255, 203, 5, 0.5);
+    }
+    .dado-btn-icone { font-size: 1.5rem; line-height: 1; }
+    .dado-btn-label {
+      font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px;
+    }
+    .dado-btn-sub {
+      font-size: 0.55rem; color: #7a9fb8; letter-spacing: 0.5px;
+    }
+    .dado-resultado-wrap {
+      margin-top: 1rem;
+      padding: 1.2rem;
+      background: radial-gradient(circle, rgba(255, 203, 5, 0.08), transparent 70%);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 203, 5, 0.3);
+      min-height: 150px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 0.5rem;
+    }
+    .dado-resultado {
+      font-family: 'Courier New', monospace;
+      font-size: 5rem; font-weight: bold;
+      color: #ffcb05;
+      text-shadow: 0 0 24px rgba(255, 203, 5, 0.9), 0 0 48px rgba(255, 152, 0, 0.5);
+      line-height: 1;
+      min-height: 6rem;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .dado-resultado.rolar {
+      animation: dadoShake 0.5s ease-out;
+    }
+    @keyframes dadoShake {
+      0% { transform: rotate(0deg) scale(0.8); opacity: 0.5; }
+      20% { transform: rotate(-15deg) scale(1.1); }
+      40% { transform: rotate(20deg) scale(0.95); }
+      60% { transform: rotate(-10deg) scale(1.05); }
+      80% { transform: rotate(5deg) scale(0.98); }
+      100% { transform: rotate(0deg) scale(1); opacity: 1; }
+    }
+    .dado-detalhe {
+      font-family: 'Courier New', monospace;
+      font-size: 0.72rem;
+      color: #7a9fb8;
+      letter-spacing: 1px;
+    }
+    .dado-botao-rolar {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 0.4rem;
+      padding: 0.7rem 1.6rem;
+      margin-top: 0.6rem;
+      background: linear-gradient(135deg, rgba(0, 224, 255, 0.2), rgba(0, 224, 255, 0.08));
+      border: 2px solid #00e0ff;
+      color: #d0f4ff;
+      border-radius: 10px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem; font-weight: bold;
+      letter-spacing: 2px; text-transform: uppercase;
+      cursor: pointer; transition: all 0.25s;
+      box-shadow: 0 0 16px rgba(0, 224, 255, 0.3);
+    }
+    .dado-botao-rolar:hover {
+      background: linear-gradient(135deg, rgba(0, 224, 255, 0.35), rgba(0, 224, 255, 0.15));
+      box-shadow: 0 0 24px rgba(0, 224, 255, 0.6);
+      transform: translateY(-2px);
+    }
+    .dado-historico {
+      margin-top: 0.8rem;
+      display: flex; gap: 0.35rem; flex-wrap: wrap; justify-content: center;
+      min-height: 1.5rem;
+    }
+    .dado-historico-item {
+      font-family: 'Courier New', monospace;
+      font-size: 0.7rem;
+      padding: 0.15rem 0.5rem;
+      background: rgba(0, 224, 255, 0.1);
+      border: 1px solid rgba(0, 224, 255, 0.3);
+      border-radius: 5px;
+      color: #d0f4ff;
+    }
+    .dado-historico-item.critico {
+      background: rgba(255, 203, 5, 0.2);
+      border-color: #ffcb05;
+      color: #ffcb05;
+      font-weight: bold;
+      box-shadow: 0 0 8px rgba(255, 203, 5, 0.6);
+    }
+    .dado-historico-item.falha {
+      background: rgba(239, 83, 80, 0.15);
+      border-color: rgba(239, 83, 80, 0.5);
+      color: #ef5350;
+    }
+    .mewdex-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 1rem;
+      max-height: 70vh;
+      overflow-y: auto;
+      padding: 0.5rem;
+    }
+    .mewdex-grid::-webkit-scrollbar { width: 8px; }
+    .mewdex-grid::-webkit-scrollbar-track { background: rgba(63, 185, 80, 0.05); border-radius: 4px; }
+    .mewdex-grid::-webkit-scrollbar-thumb { background: rgba(63, 185, 80, 0.4); border-radius: 4px; }
+    .mewdex-grid::-webkit-scrollbar-thumb:hover { background: rgba(63, 185, 80, 0.6); }
+    .mewdex-card {
+      background: linear-gradient(135deg, #0d1f16 0%, #05140c 100%);
+      border: 2px solid #1e4c30;
+      border-radius: 12px;
+      padding: 1rem 0.6rem 0.7rem;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .mewdex-card:hover {
+      transform: translateY(-5px);
+      border-color: #3fb950;
+      box-shadow: 0 0 22px rgba(63, 185, 80, 0.45), inset 0 0 20px rgba(63, 185, 80, 0.08);
+    }
+    .mewdex-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 0%, rgba(63, 185, 80, 0.12), transparent 70%);
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .mewdex-card:hover::before { opacity: 1; }
+    .mewdex-card-emoji {
+      font-size: 3.8rem;
+      line-height: 1;
+      filter: drop-shadow(0 0 12px rgba(63, 185, 80, 0.5));
+      transition: transform 0.3s;
+      position: relative;
+      z-index: 2;
+    }
+    .mewdex-card:hover .mewdex-card-emoji {
+      transform: scale(1.12) rotate(-3deg);
+      filter: drop-shadow(0 0 20px rgba(63, 185, 80, 0.8));
+    }
+    .mewdex-card .numero {
+      font-size: 0.72rem;
+      color: #3fb950;
+      font-weight: bold;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 1.5px;
+      margin-top: 0.2rem;
+      text-shadow: 0 0 6px rgba(63, 185, 80, 0.5);
+      position: relative;
+      z-index: 2;
+    }
+    .mewdex-card .nome {
+      font-weight: 700;
+      font-size: 0.92rem;
+      color: #d5ffdd;
+      line-height: 1.2;
+      position: relative;
+      z-index: 2;
+      text-shadow: 0 0 8px rgba(63, 185, 80, 0.4);
+    }
+    .mewdex-card .cientifico {
+      font-style: italic;
+      font-size: 0.68rem;
+      color: #7aa88a;
+      line-height: 1.2;
+      position: relative;
+      z-index: 2;
+      margin-bottom: 0.3rem;
+    }
+    .mewdex-badges {
+      display: flex;
+      gap: 0.3rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      position: relative;
+      z-index: 2;
+      width: 100%;
+    }
+    .mewdex-classe {
+      background: rgba(63, 185, 80, 0.15);
+      border: 1px solid rgba(63, 185, 80, 0.5);
+      color: #7ee898;
+      padding: 0.15rem 0.55rem;
+      border-radius: 6px;
+      font-size: 0.6rem;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+    .mewdex-status {
+      padding: 0.15rem 0.55rem;
+      border-radius: 6px;
+      font-size: 0.58rem;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    .mewdex-status.status-perigo {
+      background: rgba(239, 83, 80, 0.18);
+      border: 1px solid rgba(239, 83, 80, 0.55);
+      color: #ff8a8a;
+      box-shadow: 0 0 8px rgba(239, 83, 80, 0.3);
+    }
+    .mewdex-status.status-ameacado {
+      background: rgba(255, 152, 0, 0.18);
+      border: 1px solid rgba(255, 152, 0, 0.55);
+      color: #ffb74d;
+      box-shadow: 0 0 8px rgba(255, 152, 0, 0.3);
+    }
+    .mewdex-status.status-vulneravel {
+      background: rgba(255, 203, 5, 0.18);
+      border: 1px solid rgba(255, 203, 5, 0.55);
+      color: #ffd54f;
+      box-shadow: 0 0 8px rgba(255, 203, 5, 0.3);
+    }
+    .mewdex-status.status-extinto {
+      background: rgba(120, 120, 120, 0.2);
+      border: 1px solid rgba(150, 150, 150, 0.5);
+      color: #b0b0b0;
+    }
+    .mewdex-status.status-pouco {
+      background: rgba(76, 175, 80, 0.15);
+      border: 1px solid rgba(76, 175, 80, 0.5);
+      color: #81c784;
+    }
+    .mewdex-filtros { grid-template-columns: 2fr 1fr 1fr 1fr; }
     @media (max-width: 600px) {
       .filtros-container.itens-filtros { grid-template-columns: 1fr; }
+      .mewdex-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 0.6rem;
+        max-height: 60vh;
+      }
+      .mewdex-card-emoji { font-size: 2.8rem; }
+      .mewdex-card .nome { font-size: 0.8rem; }
+      .mewdex-card .cientifico { font-size: 0.6rem; }
+      .mewdex-filtros { grid-template-columns: 1fr; }
     }
   `;
   document.head.appendChild(style);
@@ -1161,6 +1458,131 @@ function fecharModalRegras() {
 
 function escutarEscRegras(e) { if (e.key === 'Escape') fecharModalRegras(); }
 
+let dadoLados = 6;
+let dadoQtd = 1;
+let dadoHistorico = [];
+
+function abrirModalDado() {
+  const container = document.getElementById('modal-item-container');
+  if (!container) return;
+
+  dadoHistorico = [];
+
+  container.innerHTML = `
+    <div class="modal-overlay" id="modal-dado-overlay">
+      <div class="modal-dado-box">
+        <button class="modal-close" id="modal-dado-close">✕</button>
+        <h3 class="modal-dado-titulo">🎲 Rolador de Dados</h3>
+
+        <div class="dado-opcoes">
+          <button class="dado-btn ativo" data-qtd="1" type="button">
+            <span class="dado-btn-icone">🎲</span>
+            <span class="dado-btn-label">1d6</span>
+            <span class="dado-btn-sub">Normal</span>
+          </button>
+          <button class="dado-btn" data-qtd="2" type="button">
+            <span class="dado-btn-icone">🎲🎲</span>
+            <span class="dado-btn-label">2d6</span>
+            <span class="dado-btn-sub">Lendário</span>
+          </button>
+        </div>
+
+        <div class="dado-resultado-wrap">
+          <div class="dado-resultado" id="dado-resultado">—</div>
+          <div class="dado-detalhe" id="dado-detalhe">Escolha acima e clique em Rolar</div>
+        </div>
+
+        <button class="dado-botao-rolar" id="dado-rolar-btn" type="button">
+          🎲 Rolar
+        </button>
+
+        <div class="dado-historico" id="dado-historico"></div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('modal-dado-overlay').addEventListener('click', (e) => {
+    if (e.target.id === 'modal-dado-overlay') fecharModalDado();
+  });
+  document.getElementById('modal-dado-close').addEventListener('click', fecharModalDado);
+  document.addEventListener('keydown', escutarEscDado);
+
+  document.querySelectorAll('.dado-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.dado-btn').forEach(b => b.classList.remove('ativo'));
+      btn.classList.add('ativo');
+      dadoQtd = parseInt(btn.dataset.qtd) || 1;
+      document.getElementById('dado-resultado').textContent = '—';
+      document.getElementById('dado-detalhe').textContent = dadoQtd === 1
+        ? '1d6 · Normal'
+        : '2d6 · Lendário';
+    });
+  });
+
+  document.getElementById('dado-rolar-btn').addEventListener('click', rolarDadoAgora);
+}
+
+function rolarDadoAgora() {
+  const resultadoEl = document.getElementById('dado-resultado');
+  const detalheEl = document.getElementById('dado-detalhe');
+  if (!resultadoEl) return;
+
+  const rolagens = [];
+  let soma = 0;
+  for (let i = 0; i < dadoQtd; i++) {
+    const r = Math.floor(Math.random() * 6) + 1;
+    rolagens.push(r);
+    soma += r;
+  }
+
+  resultadoEl.textContent = soma;
+
+  let detalheTxt = `${rolagens.join(' + ')}`;
+  if (dadoQtd === 1) {
+    if (rolagens[0] === 6) detalheTxt += ' · 💥 CRÍTICO!';
+    else if (rolagens[0] === 1) detalheTxt += ' · ⚠ Falha crítica';
+  } else {
+    detalheTxt += ` = ${soma}`;
+    if (soma >= 10) detalheTxt += ' · 💥 CRÍTICO!';
+  }
+  detalheEl.textContent = detalheTxt;
+
+  resultadoEl.classList.remove('rolar');
+  void resultadoEl.offsetWidth;
+  resultadoEl.classList.add('rolar');
+
+  dadoHistorico.unshift({
+    valor: soma,
+    critico: (dadoQtd === 1 && rolagens[0] === 6) || (dadoQtd === 2 && soma >= 10),
+    falha: (dadoQtd === 1 && rolagens[0] === 1)
+  });
+  if (dadoHistorico.length > 8) dadoHistorico.pop();
+  renderizarHistoricoDado();
+}
+
+function renderizarHistoricoDado() {
+  const el = document.getElementById('dado-historico');
+  if (!el) return;
+  el.innerHTML = dadoHistorico.map(h => {
+    const cls = h.critico ? 'critico' : (h.falha ? 'falha' : '');
+    return `<span class="dado-historico-item ${cls}">${h.valor}</span>`;
+  }).join('');
+}
+
+function fecharModalDado() {
+  const container = document.getElementById('modal-item-container');
+  if (container) container.innerHTML = '';
+  document.removeEventListener('keydown', escutarEscDado);
+}
+
+function escutarEscDado(e) {
+  if (e.key === 'Escape') fecharModalDado();
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    rolarDadoAgora();
+  }
+}
+
 function atualizarVisualBotaoIdioma(btn) {
   const alvo = btn || document.getElementById('btn-idioma-itens');
   if (!alvo) return;
@@ -1199,6 +1621,142 @@ function iniciarCarregamentoCartas() {
   if (cartasLoadPromise) return cartasLoadPromise;
   cartasLoadPromise = carregarCartas();
   return cartasLoadPromise;
+}
+
+/* =========================================================
+   MEWDEX — LÓGICA (FAUNA PERNAMBUCANA)
+   ========================================================= */
+async function carregarMewdex() {
+  if (faunaCarregada) return;
+  faunaCarregada = true;
+  const loading = document.getElementById('loading-mewdex');
+  try {
+    const res = await fetch(FAUNA_URL);
+    if (!res.ok) throw new Error('Falha ao carregar fauna');
+    const data = await res.json();
+    faunaMewdex = Array.isArray(data.especies_ameacadas) ? data.especies_ameacadas : [];
+    if (loading) loading.style.display = 'none';
+    popularSelectsMewdex();
+    renderizarMewdex(faunaMewdex);
+  } catch (e) {
+    console.error('Erro ao carregar Mewdex:', e);
+    if (loading) loading.textContent = 'Erro ao carregar a fauna (abra via servidor local — file:// é bloqueado).';
+  }
+}
+
+function popularSelectsMewdex() {
+  const selectClasse = document.getElementById('filtro-mewdex-classe');
+  const selectStatus = document.getElementById('filtro-mewdex-status');
+  if (!selectClasse || !selectStatus) return;
+
+  const classes = new Set();
+  const statuses = new Set();
+  faunaMewdex.forEach(a => {
+    if (a.classe) classes.add(a.classe);
+    if (a.situacao) statuses.add(a.situacao);
+  });
+
+  selectClasse.innerHTML = '<option value="">Todas</option>' +
+    [...classes].sort().map(c => `<option value="${c}">${c}</option>`).join('');
+  selectStatus.innerHTML = '<option value="">Todos</option>' +
+    [...statuses].sort().map(s => `<option value="${s}">${s}</option>`).join('');
+}
+
+function configurarFiltrosMewdex() {
+  const busca = document.getElementById('filtro-mewdex-busca');
+  const classe = document.getElementById('filtro-mewdex-classe');
+  const status = document.getElementById('filtro-mewdex-status');
+  const numero = document.getElementById('filtro-mewdex-numero');
+  if (!busca) return;
+  busca.addEventListener('input', aplicarFiltrosMewdex);
+  classe.addEventListener('change', aplicarFiltrosMewdex);
+  status.addEventListener('change', aplicarFiltrosMewdex);
+  numero.addEventListener('input', aplicarFiltrosMewdex);
+}
+
+function aplicarFiltrosMewdex() {
+  if (!faunaCarregada) return;
+  const busca = document.getElementById('filtro-mewdex-busca').value.toLowerCase().trim();
+  const classe = document.getElementById('filtro-mewdex-classe').value;
+  const status = document.getElementById('filtro-mewdex-status').value;
+  const numero = document.getElementById('filtro-mewdex-numero').value.trim();
+
+  const filtrados = faunaMewdex.filter((a, i) => {
+    if (busca) {
+      const popular = (a.nome_popular || '').toLowerCase();
+      const cientifico = (a.nome_cientifico || '').toLowerCase();
+      if (!popular.includes(busca) && !cientifico.includes(busca)) return false;
+    }
+    if (classe && a.classe !== classe) return false;
+    if (status && a.situacao !== status) return false;
+    if (numero && String(i + 1) !== numero) return false;
+    return true;
+  });
+
+  renderizarMewdex(filtrados);
+}
+
+function renderizarMewdex(lista) {
+  const grid = document.getElementById('mewdex-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  if (lista.length === 0) {
+    grid.innerHTML = '<p class="loading" style="grid-column: 1/-1;">Nenhum animal encontrado.</p>';
+    return;
+  }
+  lista.forEach(animal => {
+    const indice = faunaMewdex.indexOf(animal) + 1;
+    grid.appendChild(criarCardMewdex(animal, indice));
+  });
+}
+
+function criarCardMewdex(animal, indice) {
+  const numero = `PE-${String(indice).padStart(3, '0')}`;
+  const emoji = obterEmojiAnimal(animal);
+  const classeStatus = classeStatusMewdex(animal.situacao);
+  const statusCurto = statusCurtoMewdex(animal.situacao);
+
+  const card = document.createElement('a');
+  card.href = `detalhes.html?id=pe-${indice}`;
+  card.className = 'mewdex-card';
+  card.innerHTML = `
+    <div class="mewdex-card-emoji">${emoji}</div>
+    <div class="numero">${numero}</div>
+    <div class="nome">${animal.nome_popular}</div>
+    <div class="cientifico">${animal.nome_cientifico}</div>
+    <div class="mewdex-badges">
+      <span class="mewdex-classe">${animal.classe}</span>
+      <span class="mewdex-status ${classeStatus}">${statusCurto}</span>
+    </div>
+  `;
+  return card;
+}
+
+function obterEmojiAnimal(animal) {
+  const nome = (animal.nome_popular || '').toLowerCase();
+  for (const chave of Object.keys(EMOJIS_ANIMAL)) {
+    if (nome.includes(chave)) return EMOJIS_ANIMAL[chave];
+  }
+  const classe = (animal.classe || '').toLowerCase();
+  return EMOJIS_CLASSE_ANIMAL[classe] || '🐾';
+}
+
+function classeStatusMewdex(situacao) {
+  const s = (situacao || '').toLowerCase();
+  if (s.startsWith('extinto')) return 'status-extinto';
+  if (s.includes('perigo')) return 'status-perigo';
+  if (s.includes('ameaçado')) return 'status-ameacado';
+  if (s.includes('vulnerável')) return 'status-vulneravel';
+  return 'status-pouco';
+}
+
+function statusCurtoMewdex(situacao) {
+  const s = (situacao || '').toLowerCase();
+  if (s.includes('perigo')) return '⚠ Em perigo';
+  if (s.includes('ameaçado')) return '⚠ Ameaçado';
+  if (s.includes('vulnerável')) return '◐ Vulnerável';
+  if (s.startsWith('extinto')) return '✕ Extinto';
+  return '✓ Pouco preoc.';
 }
 
 async function carregarPokemon() {
@@ -1971,9 +2529,9 @@ function capitalizar(texto) {
 const CARD_SPECIES_URL = 'https://pokeapi.co/api/v2/pokemon-species';
 const CARD_MOVE_URL    = 'https://pokeapi.co/api/v2/move';
 
-const CARTAS_CACHE_KEY    = 'pokedex_cartas_cache_v16';
-const EVO_CHAIN_CACHE_KEY = 'pokedex_evo_chain_cache_v16';
-const MOVE_DET_CACHE_KEY  = 'pokedex_move_det_cache_v16';
+const CARTAS_CACHE_KEY    = 'pokedex_cartas_cache_v17';
+const EVO_CHAIN_CACHE_KEY = 'pokedex_evo_chain_cache_v17';
+const MOVE_DET_CACHE_KEY  = 'pokedex_move_det_cache_v17';
 
 let cartasCarregadas = false;
 let todasCartas = [];
@@ -2150,9 +2708,6 @@ function listarMovimentosPorNivel(pokemon) {
   return porNivel;
 }
 
-/* =========================================================
-   Escolha CANÔNICA (Cartas Pokédex) — sem randomização
-   ========================================================= */
 function selecionarCandidatos(porNivel) {
   const total = porNivel.length;
   if (total <= MAX_CANDIDATOS_MOVES) return [...porNivel];
@@ -2180,9 +2735,6 @@ async function escolherMovimentosBalanceados(pokemon) {
   return escolherDeDetalhes(detalhes);
 }
 
-/* =========================================================
-   Escolha ALEATÓRIA (Deck) — randomiza dentro de cada pool
-   ========================================================= */
 async function sortearMovimentosAleatorios(carta) {
   const nomes = carta._moveNomes || [];
   if (nomes.length === 0) return carta.movimentos || [];
@@ -2199,10 +2751,6 @@ async function sortearMovimentosAleatorios(carta) {
   return escolherDeDetalhes(detalhes, true);
 }
 
-/* =========================================================
-   Núcleo comum: escolhe 4 moves com regras de balanceamento
-   randomizar = true → embaralha dentro de cada categoria
-   ========================================================= */
 function escolherDeDetalhes(detalhes, randomizar = false) {
   let atWillAtaque = detalhes.filter(d => d.categoriaUso === 'at-will' && d.classe !== 'status' && d.dano > 0);
   let atWillStatus = detalhes.filter(d => d.categoriaUso === 'at-will' && (d.classe === 'status' || d.dano === 0));
@@ -2233,17 +2781,12 @@ function escolherDeDetalhes(detalhes, randomizar = false) {
     return false;
   }
 
-  // 1) atk at-will (fallback: status)
   if (atWillAtaque.length > 0) add(atWillAtaque[0]);
   else if (atWillStatus.length > 0) add(atWillStatus[0]);
 
-  // 2) eot
   if (eot.length > 0) add(eot[0]);
-
-  // 3) único
   if (unico.length > 0) add(unico[0]);
 
-  // 4) coringa
   let pool4 = [
     ...eot.slice(1),
     ...atWillAtaque.slice(1),
@@ -2261,7 +2804,6 @@ function escolherDeDetalhes(detalhes, randomizar = false) {
     add(d);
   }
 
-  // Fallback
   if (escolhidos.length < 4) {
     let restantes = detalhes.filter(d => !usados.has(d.nome));
     if (randomizar) restantes = embaralhar(restantes);
@@ -2271,7 +2813,6 @@ function escolherDeDetalhes(detalhes, randomizar = false) {
     }
   }
 
-  // Ordena por nível (mas no caso random, embaralha leve mantendo at-will primeiro)
   if (randomizar) {
     const ordem = { 'at-will': 0, 'eot': 1, 'unico': 2 };
     escolhidos.sort((a, b) => {
@@ -2324,7 +2865,6 @@ async function buscarCartaCompleta(id) {
     p.stats.forEach(st => { sb[st.stat.name] = st.base_stat; });
     const isLendario = !!(s.is_legendary || s.is_mythical);
 
-    // Lista COMPLETA de moves level-up (só nomes, pra economizar espaço)
     const porNivelCompleto = listarMovimentosPorNivel(p);
     const _moveNomes = porNivelCompleto.map(m => m.nome);
 
@@ -2471,9 +3011,6 @@ function renderizarCartas(lista) {
   grid.appendChild(frag);
 }
 
-/* =========================================================
-   GERA HTML DA CARTA (usado na Cartas E no modal do Deck)
-   ========================================================= */
 function gerarHTMLCarta(c, opts = {}) {
   const { mostrarPosicao = false, posicao = null } = opts;
   const numero = String(c.id).padStart(4, '0');
@@ -2645,17 +3182,15 @@ function aplicarFiltrosCartas() {
   renderizarCartas(filtradas);
 }
 
-/* =========================================================
-   DECK ALEATÓRIO (com movesets únicos por sorteio)
-   ========================================================= */
 const DECK_TAMANHO = 6;
 const DECK_MAX_LENDARIOS = 1;
-const DECK_CACHE_KEY = 'pokedex_deck_atual_v3';
-const DECK_GERACAO_KEY = 'pokedex_deck_geracao_v2';
+const DECK_CACHE_KEY = 'pokedex_deck_atual_v4';
+const DECK_GERACAO_KEY = 'pokedex_deck_geracao_v3';
 
 function configurarDeck() {
   const btnSortear = document.getElementById('btn-sortear-deck');
   const btnLimpar  = document.getElementById('btn-limpar-deck');
+  const btnDado    = document.getElementById('btn-rolar-dado');
   const selectGeracao = document.getElementById('deck-geracao');
   if (!btnSortear || !btnLimpar) return;
 
@@ -2677,6 +3212,10 @@ function configurarDeck() {
 
   btnSortear.addEventListener('click', sortearDeck);
   btnLimpar.addEventListener('click', limparDeck);
+
+  if (btnDado) {
+    btnDado.addEventListener('click', abrirModalDado);
+  }
 
   restaurarDeckSalvo();
 }
@@ -2734,7 +3273,13 @@ async function sortearDeck() {
   const geracao = selectGeracao ? selectGeracao.value : '';
 
   if (!cartasCarregadas || todasCartas.length < TOTAL_POKEMON) {
-    if (info) info.textContent = '⏳ Carregando cartas... aguarde (primeira vez demora um pouco).';
+    if (info) {
+      info.innerHTML = `
+        <span class="deck-info-tag" style="border-color: rgba(255, 203, 5, 0.5); color: #ffcb05;">
+          ⏳ Carregando cartas... aguarde
+        </span>
+      `;
+    }
     if (btn) btn.disabled = true;
     try {
       await iniciarCarregamentoCartas();
@@ -2781,10 +3326,15 @@ async function sortearDeck() {
     [deck[i], deck[j]] = [deck[j], deck[i]];
   }
 
-  if (info) info.innerHTML = '<span class="deck-info-tag">🎲 Sorteando movesets...</span>';
+  if (info) {
+    info.innerHTML = `
+      <span class="deck-info-tag" style="border-color: rgba(255, 203, 5, 0.5); color: #ffcb05;">
+        🎲 Sorteando movesets...
+      </span>
+    `;
+  }
   if (btn) btn.disabled = true;
 
-  // Sorteia movimentos únicos pra cada Pokemon
   const deckFinal = await Promise.all(
     deck.map(async (c) => {
       try {
@@ -2808,7 +3358,11 @@ function limparDeck() {
   const info = document.getElementById('deck-info');
   if (grid) grid.innerHTML = '';
   if (info) {
-    info.innerHTML = '<span class="deck-info-vazio">Nenhum deck sorteado ainda. Clique em <b>🎲 Sortear Deck</b> pra começar.</span>';
+    info.innerHTML = `
+      <span class="deck-info-vazio">
+        Nenhum deck sorteado ainda. Clique em <b>🎲 Sortear Deck</b> para começar.
+      </span>
+    `;
   }
 }
 
@@ -2822,6 +3376,24 @@ function salvarDeck(deck) {
   } catch (e) {}
 }
 
+function calcularStatsDeck(deck) {
+  const totalHP = deck.reduce((acc, c) => acc + c.hp, 0);
+  const totalLendarios = deck.filter(c => c.isLendario).length;
+
+  const contagemTipos = {};
+  deck.forEach(c => {
+    c.tipos.forEach(t => {
+      contagemTipos[t] = (contagemTipos[t] || 0) + 1;
+    });
+  });
+
+  const tiposOrdenados = Object.entries(contagemTipos)
+    .sort((a, b) => b[1] - a[1])
+    .map(([tipo]) => tipo);
+
+  return { totalHP, totalLendarios, tiposDominantes: tiposOrdenados.slice(0, 3) };
+}
+
 function renderizarDeck(deck) {
   const grid = document.getElementById('deck-grid');
   const info = document.getElementById('deck-info');
@@ -2829,23 +3401,35 @@ function renderizarDeck(deck) {
 
   grid.innerHTML = '';
 
-  const totalLendarios = deck.filter(c => c.isLendario).length;
+  const stats = calcularStatsDeck(deck);
   const selectGeracao = document.getElementById('deck-geracao');
   const geracaoNome = selectGeracao && selectGeracao.value
     ? REGIOES[selectGeracao.value]?.nome
     : null;
 
   if (info) {
+    const tiposHTML = stats.tiposDominantes.map(t =>
+      `<span class="tipo tipo-${t}" style="font-size: 0.55rem; padding: 0.1rem 0.4rem;">${NOMES_TIPOS[t] || t}</span>`
+    ).join(' ');
+
     info.innerHTML = `
       <span class="deck-info-tag">🎴 ${deck.length} Pokémon</span>
-      ${geracaoNome ? `<span class="deck-info-tag">Gen ${selectGeracao.value} · ${geracaoNome}</span>` : '<span class="deck-info-tag">Todas as gerações</span>'}
-      <span class="deck-info-tag">${totalLendarios} lendário${totalLendarios === 1 ? '' : 's'}</span>
+      ${geracaoNome
+        ? `<span class="deck-info-tag">Gen ${selectGeracao.value} · ${geracaoNome}</span>`
+        : '<span class="deck-info-tag">Todas as gerações</span>'}
+      <span class="deck-info-tag">❤️ ${stats.totalHP} HP total</span>
+      <span class="deck-info-tag">${stats.totalLendarios} lendário${stats.totalLendarios === 1 ? '' : 's'}</span>
+      ${tiposHTML ? `<span class="deck-info-tag">⚔ ${tiposHTML}</span>` : ''}
       <span class="deck-info-dica">Clique numa carta pra ver os golpes sorteados</span>
     `;
   }
 
   const frag = document.createDocumentFragment();
-  deck.forEach((c, i) => frag.appendChild(criarCardDeck(c, i + 1)));
+  deck.forEach((c, i) => {
+    const card = criarCardDeck(c, i + 1);
+    card.style.animationDelay = `${i * 0.08}s`;
+    frag.appendChild(card);
+  });
   grid.appendChild(frag);
 }
 
@@ -2868,12 +3452,30 @@ function criarCardDeck(c, posicao) {
     <div class="deck-card-nome">${capitalizar(c.nome)}</div>
     <div class="deck-card-tipos">${tiposHTML}</div>
     <div class="deck-card-stats">
-      <div class="deck-card-stat"><span class="deck-card-stat-label">HP</span><span class="deck-card-stat-valor hp">${c.hp}</span></div>
-      <div class="deck-card-stat"><span class="deck-card-stat-label">Atq</span><span class="deck-card-stat-valor">${c.ataque}</span></div>
-      <div class="deck-card-stat"><span class="deck-card-stat-label">Def</span><span class="deck-card-stat-valor">${c.defesa}</span></div>
-      <div class="deck-card-stat"><span class="deck-card-stat-label">AtqE</span><span class="deck-card-stat-valor">${c.ataqueEspecial}</span></div>
-      <div class="deck-card-stat"><span class="deck-card-stat-label">DefE</span><span class="deck-card-stat-valor">${c.defesaEspecial}</span></div>
-      <div class="deck-card-stat"><span class="deck-card-stat-label">Vel</span><span class="deck-card-stat-valor">${c.velocidade}</span></div>
+      <div class="deck-card-stat">
+        <span class="deck-card-stat-label">HP</span>
+        <span class="deck-card-stat-valor hp">${c.hp}</span>
+      </div>
+      <div class="deck-card-stat">
+        <span class="deck-card-stat-label">Atq</span>
+        <span class="deck-card-stat-valor">${c.ataque}</span>
+      </div>
+      <div class="deck-card-stat">
+        <span class="deck-card-stat-label">Def</span>
+        <span class="deck-card-stat-valor">${c.defesa}</span>
+      </div>
+      <div class="deck-card-stat">
+        <span class="deck-card-stat-label">AtqE</span>
+        <span class="deck-card-stat-valor">${c.ataqueEspecial}</span>
+      </div>
+      <div class="deck-card-stat">
+        <span class="deck-card-stat-label">DefE</span>
+        <span class="deck-card-stat-valor">${c.defesaEspecial}</span>
+      </div>
+      <div class="deck-card-stat">
+        <span class="deck-card-stat-label">Vel</span>
+        <span class="deck-card-stat-valor">${c.velocidade}</span>
+      </div>
     </div>
     <div class="deck-card-dado">${c.isLendario ? '🎲🎲 2d6' : '🎲 1d6'}</div>
     <div class="deck-card-ver">🎲 Ver golpes</div>
@@ -2884,9 +3486,6 @@ function criarCardDeck(c, posicao) {
   return card;
 }
 
-/* =========================================================
-   MODAL DA CARTA DO DECK
-   ========================================================= */
 function abrirModalCartaDeck(c, posicao) {
   const container = document.getElementById('modal-item-container');
   if (!container) return;
