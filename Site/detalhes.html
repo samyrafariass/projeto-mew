@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Detalhes do Pokémon</title>
   <link rel="stylesheet" href="style.css">
+  <!-- A-Frame: usado tanto pelo viewer de fauna quanto por visualizar3d -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js" crossorigin="anonymous"></script>
 </head>
 <body>
@@ -34,6 +35,8 @@
 
   <div id="modal-container"></div>
 
+  <!-- Módulo de biomas da fauna (precisa vir ANTES do detalhes.js) -->
+  <script src="biomas_fauna.js"></script>
   <script src="detalhes.js"></script>
 </body>
 </html>

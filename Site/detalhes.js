@@ -746,6 +746,11 @@ async function carregarDetalhes() {
   }
 }
 
+/* =========================================================
+   FAUNA (PROJETO MEW) — Ambiente virtual por bioma
+   Usa o módulo MewBiomas (biomas_fauna.js) para gerar
+   o cenário 3D de acordo com o habitat do animal.
+   ========================================================= */
 async function carregarAnimalFauna(id, container, loading) {
   try {
     const resposta = await fetch('fauna_pe.json');
@@ -763,11 +768,29 @@ async function carregarAnimalFauna(id, container, loading) {
     loading.style.display = 'none';
 
     const modeloPath = animal.modelo_gltf || "assets/modelo/animais.glb";
-    const cenarioPath = animal.cenario_fundo || "assets/ambiente/ambiente.jpg";
     const escala3d = animal.escala || "0.1";
 
     const habitatTexto = Array.isArray(animal.habitat) ? animal.habitat.join(', ') : animal.habitat;
     const ameacasTexto = Array.isArray(animal.principais_ameacas) ? animal.principais_ameacas.join('; ') : animal.principais_ameacas;
+
+    const url3D = `visualizar3d_fauna.html?id=${id}`;
+
+    // ===== MONTAGEM DO BIOMA =====
+    let ambienteHtml = '';
+    let nomeBioma = '';
+    if (window.MewBiomas && typeof window.MewBiomas.montarCena3D === 'function') {
+      const { html, bioma } = window.MewBiomas.montarCena3D(animal, { densidade: 'baixa' });
+      ambienteHtml = html;
+      nomeBioma = bioma.nome;
+    } else {
+      ambienteHtml = `
+        <a-sky color="#87CEEB"></a-sky>
+        <a-circle position="0 0 0" rotation="-90 0 0" radius="60" color="#4a7a4a"></a-circle>
+        <a-entity light="type: ambient; color: #fff; intensity: 0.9"></a-entity>
+        <a-entity position="5 8 5" light="type: directional; color: #fff; intensity: 1.2"></a-entity>
+      `;
+      nomeBioma = 'Genérico';
+    }
 
     container.innerHTML = `
       <div class="detalhes-layout">
@@ -775,24 +798,19 @@ async function carregarAnimalFauna(id, container, loading) {
 
           <div class="screen ambiente-virtual" style="position: relative; overflow: hidden; border-radius: 15px; padding: 0;">
             <a-scene embedded style="width: 100%; height: 350px;" vr-mode-ui="enabled: false">
-              <a-assets>
-                <a-asset-item id="modelo3d" src="${modeloPath}"></a-asset-item>
-                <img id="fundo-bioma" src="${cenarioPath}">
-              </a-assets>
-
-              <a-sky src="#fundo-bioma"></a-sky>
-              <a-light type="ambient" color="#ffffff" intensity="1.5"></a-light>
-              <a-light type="directional" position="2 4 2" intensity="1.2"></a-light>
-
+              ${ambienteHtml}
               <a-gltf-model
-                src="#modelo3d"
+                src="${modeloPath}"
                 position="0 -1.2 -4"
                 scale="${escala3d} ${escala3d} ${escala3d}"
                 animation="property: rotation; to: 0 360 0; loop: true; dur: 12000">
               </a-gltf-model>
-
               <a-entity camera look-controls position="0 1.6 0"></a-entity>
             </a-scene>
+
+            <a href="${url3D}" class="link-3d-fauna" title="Clique para ver em tela cheia (3D)">
+              <span class="badge-3d-fauna">🧊 Tela cheia 3D</span>
+            </a>
           </div>
 
           <div style="display: flex; gap: 15px; margin-top: 15px; align-items: stretch; justify-content: space-between;">
@@ -803,6 +821,7 @@ async function carregarAnimalFauna(id, container, loading) {
               <p style="font-style: italic; color: #8b949e; margin-bottom: 6px; font-size: 13px;">${animal.nome_cientifico}</p>
               <div class="tipos"><span class="tipo" style="background: #3fb950; text-transform: uppercase;">${animal.classe}</span></div>
               <p style="color: #ff4d4d; font-weight: bold; margin-top: 8px; font-size: 13px;">⚠️ Status: ${animal.situacao}</p>
+              <p style="color: #7ee898; margin-top: 6px; font-size: 11px; font-family: 'Courier New', monospace; letter-spacing: 1px; text-transform: uppercase;">🌿 Bioma: ${nomeBioma}</p>
             </div>
 
             <button id="btn-missao-novo" style="flex: 1; margin: 0; position: relative !important; top: auto !important; left: auto !important; transform: none !important; padding: 10px; font-weight: bold; font-size: 14px; cursor: pointer; border-radius: 12px; background: linear-gradient(135deg, #238636, #2ea043); color: white; border: 2px solid #3fb950; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; flex-direction: column; text-align: center;">
@@ -844,6 +863,9 @@ async function carregarAnimalFauna(id, container, loading) {
   }
 }
 
+/* =========================================================
+   POKÉMON CLÁSSICO
+   ========================================================= */
 async function carregarPokemonClassico(id, container, loading) {
   try {
     const resposta = await fetch(`${API_URL}/${id}`);

@@ -3,78 +3,100 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Visualização 3D — Pokédex</title>
+  <title>Visualização 3D — Projeto Mew</title>
   <script src="https://aframe.io/releases/1.4.0/aframe.min.js" crossorigin="anonymous"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #0a1628;
+      background: #05140c;
       overflow: hidden;
     }
     .info {
       position: absolute;
       top: 15px; left: 15px; z-index: 100;
-      background: rgba(0, 20, 40, 0.85);
-      border: 2px solid rgba(0, 224, 255, 0.5);
+      background: rgba(5, 30, 15, 0.85);
+      border: 2px solid rgba(63, 185, 80, 0.55);
       border-radius: 12px; padding: 10px 18px;
       backdrop-filter: blur(6px);
-      box-shadow: 0 0 20px rgba(0, 224, 255, 0.3);
+      box-shadow: 0 0 20px rgba(63, 185, 80, 0.35);
     }
     .info a {
-      color: #00e0ff; text-decoration: none;
+      color: #7ee898; text-decoration: none;
       font-family: 'Courier New', monospace; font-weight: bold;
       letter-spacing: 1px; text-transform: uppercase;
       font-size: 0.85rem; transition: all 0.25s;
     }
-    .info a:hover { color: #fff; text-shadow: 0 0 12px #00e0ff; }
-    .nome-pokemon {
+    .info a:hover { color: #fff; text-shadow: 0 0 12px #3fb950; }
+    .nome-animal {
       position: absolute; top: 15px; right: 15px; z-index: 100;
-      background: rgba(0, 20, 40, 0.85);
-      border: 2px solid rgba(255, 203, 5, 0.5);
+      background: rgba(5, 30, 15, 0.85);
+      border: 2px solid rgba(63, 185, 80, 0.55);
       border-radius: 12px; padding: 10px 18px;
       backdrop-filter: blur(6px);
-      box-shadow: 0 0 20px rgba(255, 203, 5, 0.3);
-      color: #ffcb05;
+      box-shadow: 0 0 20px rgba(63, 185, 80, 0.35);
+      color: #7ee898;
       font-family: 'Courier New', monospace; font-weight: bold;
       letter-spacing: 1px; text-transform: uppercase;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
+      max-width: 340px;
+      text-align: right;
+      line-height: 1.35;
+    }
+    .nome-animal .cientifico {
+      display: block;
+      font-style: italic;
+      font-weight: normal;
+      font-size: 0.72rem;
+      color: #a8d8b8;
+      text-transform: none;
+      letter-spacing: 0.5px;
+      margin-top: 3px;
+    }
+    .nome-animal .bioma {
+      display: block;
+      font-size: 0.62rem;
+      color: #6ab880;
+      letter-spacing: 1.5px;
+      margin-top: 5px;
+      padding-top: 5px;
+      border-top: 1px dashed rgba(63, 185, 80, 0.35);
     }
     .loading {
       position: absolute; top: 50%; left: 50%;
       transform: translate(-50%, -50%);
-      color: #00e0ff;
+      color: #7ee898;
       font-family: 'Courier New', monospace;
       font-size: 1.2rem; letter-spacing: 2px;
       z-index: 100;
-      text-shadow: 0 0 15px rgba(0, 224, 255, 0.8);
+      text-shadow: 0 0 15px rgba(63, 185, 80, 0.8);
       background: rgba(0, 0, 0, 0.6);
       padding: 20px 30px; border-radius: 12px;
-      border: 2px solid rgba(0, 224, 255, 0.4);
+      border: 2px solid rgba(63, 185, 80, 0.4);
       text-align: center; max-width: 90vw;
     }
     .instrucoes {
       position: absolute; bottom: 20px; left: 50%;
       transform: translateX(-50%); z-index: 100;
-      color: #a0c4d8;
+      color: #a8d8b8;
       font-family: 'Courier New', monospace;
       font-size: 0.75rem; letter-spacing: 1px;
       background: rgba(0, 0, 0, 0.55);
       padding: 8px 18px; border-radius: 20px;
-      border: 1px solid rgba(0, 224, 255, 0.2);
+      border: 1px solid rgba(63, 185, 80, 0.25);
       backdrop-filter: blur(4px);
       white-space: nowrap;
     }
-    .instrucoes span { color: #00e0ff; font-weight: bold; }
+    .instrucoes span { color: #7ee898; font-weight: bold; }
     .controles {
       position: absolute; bottom: 60px; left: 50%;
       transform: translateX(-50%); z-index: 100;
       display: flex; gap: 8px;
     }
     .controles button {
-      background: rgba(0, 20, 40, 0.85);
-      border: 2px solid rgba(0, 224, 255, 0.5);
-      color: #00e0ff;
+      background: rgba(5, 30, 15, 0.85);
+      border: 2px solid rgba(63, 185, 80, 0.55);
+      color: #7ee898;
       font-family: 'Courier New', monospace;
       font-size: 0.75rem; font-weight: bold;
       letter-spacing: 1px; padding: 8px 14px;
@@ -83,15 +105,15 @@
       backdrop-filter: blur(6px);
     }
     .controles button:hover {
-      background: rgba(0, 224, 255, 0.2);
-      border-color: #00e0ff;
-      box-shadow: 0 0 12px rgba(0, 224, 255, 0.6);
+      background: rgba(63, 185, 80, 0.25);
+      border-color: #3fb950;
+      box-shadow: 0 0 12px rgba(63, 185, 80, 0.6);
       transform: translateY(-2px);
     }
     .controles button.ativo {
-      background: rgba(255, 203, 5, 0.2);
-      border-color: #ffcb05; color: #ffcb05;
-      box-shadow: 0 0 12px rgba(255, 203, 5, 0.6);
+      background: rgba(63, 185, 80, 0.35);
+      border-color: #7ee898; color: #fff;
+      box-shadow: 0 0 14px rgba(63, 185, 80, 0.7);
     }
     .teclas-wasd {
       position: absolute; bottom: 20px; right: 20px; z-index: 100;
@@ -99,14 +121,14 @@
       grid-template-columns: repeat(3, 34px);
       grid-template-rows: repeat(2, 34px);
       gap: 4px;
-      opacity: 0.8;
+      opacity: 0.85;
     }
     .teclas-wasd .tecla {
       display: flex; align-items: center; justify-content: center;
-      background: rgba(0, 20, 40, 0.85);
-      border: 2px solid rgba(0, 224, 255, 0.4);
+      background: rgba(5, 30, 15, 0.85);
+      border: 2px solid rgba(63, 185, 80, 0.45);
       border-radius: 6px;
-      color: #00e0ff;
+      color: #7ee898;
       font-family: 'Courier New', monospace;
       font-weight: bold;
       font-size: 0.85rem;
@@ -118,69 +140,69 @@
     .teclas-wasd .tecla.s { grid-column: 2; grid-row: 2; }
     .teclas-wasd .tecla.d { grid-column: 3; grid-row: 2; }
     .teclas-wasd .tecla.ativa {
-      background: rgba(0, 224, 255, 0.35);
-      border-color: #00e0ff;
+      background: rgba(63, 185, 80, 0.45);
+      border-color: #7ee898;
       color: #fff;
-      box-shadow: 0 0 12px rgba(0, 224, 255, 0.7);
+      box-shadow: 0 0 12px rgba(63, 185, 80, 0.7);
     }
     .aviso-file {
       position: fixed; inset: 0;
-      background: rgba(5, 10, 20, 0.96);
+      background: rgba(3, 15, 8, 0.96);
       z-index: 9999;
       display: flex; align-items: center; justify-content: center;
       padding: 20px;
     }
     .aviso-file-box {
       max-width: 640px;
-      background: linear-gradient(135deg, #0a1628 0%, #051020 100%);
-      border: 3px solid #ffcb05;
+      background: linear-gradient(135deg, #05140c 0%, #030a06 100%);
+      border: 3px solid #3fb950;
       border-radius: 16px; padding: 2rem 1.8rem;
-      box-shadow: 0 0 60px rgba(255, 203, 5, 0.5);
-      color: #d0f4ff;
+      box-shadow: 0 0 60px rgba(63, 185, 80, 0.5);
+      color: #d5ffdd;
       font-family: 'Courier New', monospace;
     }
     .aviso-file-box h2 {
-      color: #ffcb05; font-size: 1.2rem;
+      color: #7ee898; font-size: 1.2rem;
       letter-spacing: 2px; text-transform: uppercase;
       margin-bottom: 1rem;
-      text-shadow: 0 0 12px rgba(255, 203, 5, 0.6);
-      border-bottom: 2px dashed rgba(255, 203, 5, 0.35);
+      text-shadow: 0 0 12px rgba(63, 185, 80, 0.6);
+      border-bottom: 2px dashed rgba(63, 185, 80, 0.35);
       padding-bottom: 0.6rem;
     }
     .aviso-file-box p {
       font-size: 0.9rem; line-height: 1.6;
-      margin-bottom: 0.8rem; color: #d0f4ff;
+      margin-bottom: 0.8rem; color: #d5ffdd;
     }
     .aviso-file-box code {
-      background: rgba(0, 224, 255, 0.12);
-      border: 1px solid rgba(0, 224, 255, 0.35);
-      color: #00e0ff; padding: 0.15rem 0.5rem;
+      background: rgba(63, 185, 80, 0.12);
+      border: 1px solid rgba(63, 185, 80, 0.35);
+      color: #7ee898; padding: 0.15rem 0.5rem;
       border-radius: 4px; font-size: 0.85rem;
     }
     .aviso-file-box ol { margin-left: 1.2rem; margin-bottom: 1rem; }
     .aviso-file-box li {
       margin-bottom: 0.5rem; font-size: 0.85rem; line-height: 1.5;
     }
-    .aviso-file-box li b { color: #00e0ff; }
+    .aviso-file-box li b { color: #7ee898; }
     .aviso-file-box .btn-voltar {
       display: inline-block; margin-top: 0.5rem;
       padding: 0.6rem 1.2rem;
-      background: rgba(0, 224, 255, 0.15);
-      border: 2px solid #00e0ff; color: #00e0ff;
+      background: rgba(63, 185, 80, 0.15);
+      border: 2px solid #3fb950; color: #7ee898;
       border-radius: 8px; text-decoration: none;
       font-weight: bold; letter-spacing: 1px;
       text-transform: uppercase; font-size: 0.8rem;
       transition: all 0.25s;
     }
     .aviso-file-box .btn-voltar:hover {
-      background: rgba(0, 224, 255, 0.3);
-      box-shadow: 0 0 14px rgba(0, 224, 255, 0.6);
+      background: rgba(63, 185, 80, 0.3);
+      box-shadow: 0 0 14px rgba(63, 185, 80, 0.6);
     }
     @media (max-width: 700px) {
       .instrucoes { font-size: 0.6rem; padding: 6px 12px; white-space: normal; text-align: center; max-width: 90vw; }
       .info { padding: 8px 12px; }
       .info a { font-size: 0.7rem; }
-      .nome-pokemon { padding: 8px 12px; font-size: 0.7rem; }
+      .nome-animal { padding: 8px 12px; font-size: 0.68rem; max-width: 200px; }
       .controles button { font-size: 0.65rem; padding: 6px 10px; }
       .teclas-wasd { transform: scale(0.85); transform-origin: bottom right; }
     }
@@ -204,11 +226,15 @@
   <div class="info">
     <a href="#" id="voltar-link">← Voltar aos detalhes</a>
   </div>
-  <div class="nome-pokemon" id="nome-pokemon">#0000 — Pokémon</div>
-  <div class="loading" id="loading">🌀 Carregando modelo 3D...</div>
+  <div class="nome-animal" id="nome-animal">
+    <span id="nome-popular">Carregando...</span>
+    <span class="cientifico" id="nome-cientifico"></span>
+    <span class="bioma" id="nome-bioma"></span>
+  </div>
+  <div class="loading" id="loading">🌀 Carregando ambiente 3D...</div>
 
   <div class="controles" id="controles" style="display:none;">
-    <button id="btn-anim" title="Pausar/Retomar animação">⏸ Pausar</button>
+    <button id="btn-anim" title="Pausar/Retomar rotação">⏸ Pausar</button>
     <button id="btn-rotacao" title="Ativar rotação automática">🔄 Auto-rotação</button>
     <button id="btn-reset" title="Resetar câmera">🎯 Resetar</button>
   </div>
@@ -226,13 +252,16 @@
 
   <div id="scene-container"></div>
 
+  <!-- Módulo de biomas -->
+  <script src="biomas_fauna.js"></script>
+
   <script>
     AFRAME.registerComponent('orbit-camera', {
       schema: {
         distance:        { type: 'number',  default: 4.0 },
         minDistance:     { type: 'number',  default: 1.0 },
-        maxDistance:     { type: 'number',  default: 25 },
-        targetY:         { type: 'number',  default: 1.0 },
+        maxDistance:     { type: 'number',  default: 30 },
+        targetY:         { type: 'number',  default: 0.0 },
         minPolar:        { type: 'number',  default: 0.10 },
         maxPolar:        { type: 'number',  default: Math.PI - 0.10 },
         autoRotate:      { type: 'boolean', default: false },
@@ -241,7 +270,6 @@
         zoomSpeed:       { type: 'number',  default: 0.6 },
         moveSpeed:       { type: 'number',  default: 4.0 }
       },
-
       init: function () {
         this.theta = Math.PI / 4;
         this.phi = Math.PI / 2.4;
@@ -274,7 +302,6 @@
 
         this.updateCamera();
       },
-
       tick: function (t, dt) {
         if (!this._initialized) {
           const canvas = this.el.sceneEl && this.el.sceneEl.canvas;
@@ -290,17 +317,14 @@
             window.addEventListener('keydown', this._onKeyDown);
             window.addEventListener('keyup', this._onKeyUp);
             this._initialized = true;
-            console.log('🎥 Controles da câmera inicializados');
           } else {
             return;
           }
         }
 
         const dtSec = Math.min(dt || 16, 100) / 1000;
-
         const sinT = Math.sin(this.theta);
         const cosT = Math.cos(this.theta);
-
         const fwdX = -sinT;
         const fwdZ = -cosT;
         const rgtX = cosT;
@@ -326,7 +350,6 @@
 
         this.updateCamera();
       },
-
       updateCamera: function () {
         const sinPhi = Math.sin(this.phi);
         const cosPhi = Math.cos(this.phi);
@@ -344,7 +367,6 @@
         cam.lookAt(this.target);
         cam.updateMatrixWorld(true);
       },
-
       onPointerDown: function (e) {
         if (e.button !== 0) return;
         this.isDragging = true;
@@ -370,7 +392,6 @@
         this.distance += e.deltaY * 0.005 * this.data.zoomSpeed;
         this.distance = Math.max(this.data.minDistance, Math.min(this.data.maxDistance, this.distance));
       },
-
       onTouchStart: function (e) {
         if (e.touches.length === 1) {
           this.isDragging = true;
@@ -407,12 +428,10 @@
         this.isDragging = false;
         this._pinchStartDist = 0;
       },
-
       atualizarTeclasVisuais: function (code, ativa) {
         const el = document.querySelector(`.tecla[data-key="${code}"]`);
         if (el) el.classList.toggle('ativa', ativa);
       },
-
       reset: function () {
         this.theta = Math.PI / 4;
         this.phi = Math.PI / 2.4;
@@ -420,11 +439,9 @@
         this.target.set(0, this.data.targetY, 0);
         this.updateCamera();
       },
-
       setAutoRotate: function (on) {
         this.data.autoRotate = on;
       },
-
       remove: function () {
         const canvas = this.canvas;
         if (canvas) {
@@ -442,15 +459,11 @@
     });
 
     const params = new URLSearchParams(window.location.search);
-    const pokemonId = parseInt(params.get('id')) || 1;
-    const isShiny = params.get('shiny') === 'true';
-    const nomePokemon = params.get('nome') || '';
+    const faunaId = params.get('id') || '';
+    const numeroIndex = parseInt(faunaId.replace('pe-', ''), 10);
 
-    document.getElementById('voltar-link').href = `detalhes.html?id=${pokemonId}`;
-    document.title = `Visualização 3D — #${String(pokemonId).padStart(4, '0')} — Pokédex`;
-    document.getElementById('nome-pokemon').textContent = nomePokemon
-      ? `#${String(pokemonId).padStart(4, '0')} — ${nomePokemon}`
-      : `#${String(pokemonId).padStart(4, '0')}`;
+    document.getElementById('voltar-link').href = `detalhes.html?id=${faunaId}`;
+    document.title = `Visualização 3D — ${faunaId.toUpperCase()} — Projeto Mew`;
 
     if (window.location.protocol === 'file:') {
       document.getElementById('aviso-file').style.display = 'flex';
@@ -458,56 +471,91 @@
       document.getElementById('controles').style.display = 'none';
       document.getElementById('instrucoes').style.display = 'none';
       document.getElementById('teclas-wasd').style.display = 'none';
+    } else if (!faunaId || isNaN(numeroIndex) || numeroIndex <= 0) {
+      document.getElementById('loading').textContent = '⚠️ Animal não especificado na URL.';
     } else {
-      inicializarCena3D();
+      iniciarFluxoFauna();
     }
 
-    function inicializarCena3D() {
+    async function iniciarFluxoFauna() {
+      const loading = document.getElementById('loading');
+      let animal = null;
+
+      try {
+        const res = await fetch('fauna_pe.json');
+        if (!res.ok) throw new Error('fauna_pe.json não encontrado');
+        const data = await res.json();
+        const lista = Array.isArray(data.especies_ameacadas) ? data.especies_ameacadas : [];
+        animal = lista[numeroIndex - 1];
+        if (!animal) throw new Error('Animal não encontrado no índice ' + numeroIndex);
+      } catch (e) {
+        console.error('Erro ao buscar fauna:', e);
+        loading.textContent = '⚠️ Não foi possível carregar os dados do animal.';
+        return;
+      }
+
+      document.getElementById('nome-popular').textContent =
+        `#${faunaId.toUpperCase()} — ${animal.nome_popular}`;
+      document.getElementById('nome-cientifico').textContent = animal.nome_cientifico || '';
+
+      let nomeBioma = 'Genérico';
+      if (window.MewBiomas && typeof window.MewBiomas.detectarBioma === 'function') {
+        const chave = window.MewBiomas.detectarBioma(animal);
+        nomeBioma = window.MewBiomas.BIOMAS[chave]?.nome || chave;
+      }
+      document.getElementById('nome-bioma').textContent = `🌿 Bioma: ${nomeBioma}`;
+
+      document.title = `${animal.nome_popular} — Projeto Mew (3D)`;
+
+      const modeloPath = animal.modelo_gltf || 'assets/modelo/animais.glb';
+
+      montarCena3D(modeloPath, animal);
+    }
+
+    function montarCena3D(modeloPath, animal) {
       const container = document.getElementById('scene-container');
+
+      let ambienteHtml = '';
+      let bioma = null;
+      if (window.MewBiomas && typeof window.MewBiomas.montarCena3D === 'function') {
+        const resultado = window.MewBiomas.montarCena3D(animal, { densidade: 'alta' });
+        ambienteHtml = resultado.html;
+        bioma = resultado.bioma;
+      } else {
+        ambienteHtml = `
+          <a-sky color="#87CEEB"></a-sky>
+          <a-circle position="0 0 0" rotation="-90 0 0" radius="80" color="#4a7a4a"></a-circle>
+          <a-entity light="type: ambient; color: #fff; intensity: 0.9"></a-entity>
+          <a-entity position="5 8 5" light="type: directional; color: #fff; intensity: 1.2"></a-entity>
+        `;
+      }
+
+      const fogAttr = bioma
+        ? `fog="type: exponential; color: ${bioma.fog}; density: ${bioma.fogDensity}"`
+        : '';
+
       container.innerHTML = `
         <a-scene
           embedded
+          ${fogAttr}
           renderer="antialias: true; colorManagement: true;"
           shadow="type: pcfsoft"
-          fog="type: exponential; color: #87CEEB; density: 0.01;"
           style="position: fixed; inset: 0; width: 100vw; height: 100vh;"
         >
-          <a-sky color="#87CEEB"></a-sky>
+          <a-assets>
+            <a-asset-item id="modelo-fauna" src="${modeloPath}"></a-asset-item>
+          </a-assets>
 
-          <a-circle
-            position="0 0 0"
-            rotation="-90 0 0"
-            radius="60"
-            color="#4a7a4a"
-            shadow="receive: true"
-          ></a-circle>
-
-          <a-entity
-            geometry="primitive: plane; width: 60; height: 60;"
-            rotation="-90 0 0"
-            position="0 0.01 0"
-            material="color: #3a6a3a; opacity: 0.35; transparent: true;"
-            line="start: -30 0 -30; end: -30 0 30; color: #6a9a6a"
-          ></a-entity>
+          ${ambienteHtml}
 
           <a-entity id="modelo-wrapper"></a-entity>
-
-          <a-entity light="type: ambient; color: #ffffff; intensity: 0.7"></a-entity>
-          <a-entity
-            position="5 10 7"
-            light="type: directional; color: #ffffff; intensity: 1.0; castShadow: true; shadowMapWidth: 2048; shadowMapHeight: 2048"
-          ></a-entity>
-          <a-entity
-            position="-4 5 3"
-            light="type: point; color: #ffdd88; intensity: 0.5"
-          ></a-entity>
 
           <a-camera
             id="camera"
             look-controls="enabled: false"
             wasd-controls="enabled: false"
             fov="60"
-            orbit-camera="distance: 4.0; minDistance: 1.0; maxDistance: 25; targetY: 1.0; moveSpeed: 5.0;"
+            orbit-camera="distance: 5.0; minDistance: 0.8; maxDistance: 35; targetY: 0.0; moveSpeed: 5.0;"
           ></a-camera>
         </a-scene>
       `;
@@ -517,25 +565,16 @@
       document.getElementById('teclas-wasd').style.display = 'grid';
 
       const cena = container.querySelector('a-scene');
-
       cena.addEventListener('loaded', () => {
-        console.log('🎬 A-Frame pronto');
-        carregarModelo3D();
-        configurarBotoes();
+        console.log('🎬 A-Frame (fauna) pronto — bioma:', bioma?.nome);
+        carregarModeloFauna();
+        configurarBotoesFauna();
       });
-
-      setTimeout(() => {
-        if (!modeloCarregadoIniciado) {
-          console.log('⏱️ Fallback: inicializando');
-          carregarModelo3D();
-          configurarBotoes();
-        }
-      }, 1500);
     }
 
-    let modeloCarregadoIniciado = false;
+    let modeloFaunaIniciado = false;
 
-    function configurarBotoes() {
+    function configurarBotoesFauna() {
       const btnAnim  = document.getElementById('btn-anim');
       const btnRot   = document.getElementById('btn-rotacao');
       const btnReset = document.getElementById('btn-reset');
@@ -543,33 +582,32 @@
       if (!btnAnim || btnAnim.dataset.configurado) return;
       btnAnim.dataset.configurado = 'true';
 
-      let animacaoPausada = false;
-      let rotacaoAtiva = false;
+      let rotacaoPausada = false;
+      let rotacaoAuto = false;
 
       btnAnim.addEventListener('click', () => {
-        const modelo = document.getElementById('modelo-3d');
+        const modelo = document.getElementById('modelo-fauna-3d');
         if (!modelo) return;
-        const mixer = modelo.components['animation-mixer'];
-        if (!mixer) return;
-        animacaoPausada = !animacaoPausada;
+        rotacaoPausada = !rotacaoPausada;
         try {
-          if (mixer.actions && mixer.actions.length > 0) {
-            mixer.actions.forEach(a => { a.paused = animacaoPausada; });
-          } else if (mixer.mixer) {
-            mixer.mixer.timeScale = animacaoPausada ? 0 : 1;
+          if (rotacaoPausada) {
+            modelo.removeAttribute('animation');
+          } else {
+            modelo.setAttribute('animation',
+              'property: rotation; to: 0 360 0; loop: true; dur: 12000; easing: linear');
           }
         } catch (e) { console.warn(e); }
-        btnAnim.textContent = animacaoPausada ? '▶ Retomar' : '⏸ Pausar';
-        btnAnim.classList.toggle('ativo', animacaoPausada);
+        btnAnim.textContent = rotacaoPausada ? '▶ Retomar' : '⏸ Pausar';
+        btnAnim.classList.toggle('ativo', rotacaoPausada);
       });
 
       btnRot.addEventListener('click', () => {
         const cam = document.getElementById('camera');
         if (!cam) return;
-        rotacaoAtiva = !rotacaoAtiva;
+        rotacaoAuto = !rotacaoAuto;
         const comp = cam.components['orbit-camera'];
-        if (comp) comp.setAutoRotate(rotacaoAtiva);
-        btnRot.classList.toggle('ativo', rotacaoAtiva);
+        if (comp) comp.setAutoRotate(rotacaoAuto);
+        btnRot.classList.toggle('ativo', rotacaoAuto);
       });
 
       btnReset.addEventListener('click', () => {
@@ -580,122 +618,75 @@
       });
     }
 
-    function carregarModelo3D() {
-      if (modeloCarregadoIniciado) return;
-      modeloCarregadoIniciado = true;
+    function carregarModeloFauna() {
+      if (modeloFaunaIniciado) return;
+      modeloFaunaIniciado = true;
 
       const loading = document.getElementById('loading');
       const wrapper = document.getElementById('modelo-wrapper');
       if (!wrapper) return;
 
-      const modelo = document.createElement('a-gltf-model');
-      modelo.setAttribute('id', 'modelo-3d');
-      modelo.setAttribute('animation-mixer', 'clip: *; loop: repeat; timeScale: 1;');
+      const modelo = document.createElement('a-entity');
+      modelo.setAttribute('id', 'modelo-fauna-3d');
+      modelo.setAttribute('gltf-model', '#modelo-fauna');
+      modelo.setAttribute('rotation', '0 0 0');
+      modelo.setAttribute('animation',
+        'property: rotation; to: 0 360 0; loop: true; dur: 12000; easing: linear');
       wrapper.appendChild(modelo);
 
-      const forma = isShiny ? 'shiny' : 'regular';
-      const urlDireta = `https://raw.githubusercontent.com/Pokemon-3D-api/assets/main/models/opt/${forma}/${pokemonId}.glb`;
+      let tentativas = 0;
+      const ajustar = () => {
+        const mesh = modelo.getObject3D('mesh');
+        if (!mesh) {
+          if (tentativas++ < 40) { setTimeout(ajustar, 100); return; }
+          console.warn('⚠️ Mesh do modelo não apareceu');
+          loading.textContent = '⚠️ Não foi possível carregar o modelo 3D.';
+          return;
+        }
 
-      console.log('🔍 Tentando:', urlDireta);
+        mesh.position.set(0, 0, 0);
+        mesh.rotation.set(0, 0, 0);
+        mesh.scale.set(1, 1, 1);
+        mesh.updateMatrixWorld(true);
 
-      function ajustarModelo() {
-        let tentativas = 0;
-        const tentar = () => {
-          const mesh = modelo.getObject3D('mesh');
-          if (!mesh) {
-            if (tentativas++ < 30) {
-              setTimeout(tentar, 100);
-            } else {
-              console.warn('⚠️ Mesh nunca apareceu');
-            }
-            return;
-          }
+        const box = new THREE.Box3().setFromObject(mesh);
+        const size = box.getSize(new THREE.Vector3());
+        const center = box.getCenter(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+        if (!isFinite(maxDim) || maxDim <= 0.0001) {
+          console.warn('⚠️ Tamanho inválido');
+          loading.style.display = 'none';
+          return;
+        }
 
-          mesh.position.set(0, 0, 0);
-          mesh.rotation.set(0, 0, 0);
-          mesh.scale.set(1, 1, 1);
-          mesh.updateMatrixWorld(true);
+        const escala = 2.0 / maxDim;
+        mesh.scale.set(escala, escala, escala);
+        mesh.position.set(
+          -center.x * escala,
+          -center.y * escala + (size.y * escala / 2),
+          -center.z * escala
+        );
+        mesh.updateMatrixWorld(true);
 
-          const box = new THREE.Box3().setFromObject(mesh);
-          const size = box.getSize(new THREE.Vector3());
-          const center = box.getCenter(new THREE.Vector3());
-
-          const maxDim = Math.max(size.x, size.y, size.z);
-          if (!isFinite(maxDim) || maxDim <= 0.0001) {
-            console.warn('⚠️ Tamanho inválido, usando escala 1');
-            return;
-          }
-
-          const escala = 2.0 / maxDim;
-
-          mesh.scale.set(escala, escala, escala);
-
-          mesh.position.set(
-            -center.x * escala,
-            -center.y * escala + (size.y * escala / 2),
-            -center.z * escala
-          );
-
-          mesh.updateMatrixWorld(true);
-        };
-        tentar();
-      }
-
-      function onLoaded() {
         loading.style.display = 'none';
-        console.log('✅ Modelo carregado!');
-        ajustarModelo();
-      }
+        console.log('✅ Modelo da fauna ajustado');
+      };
 
-      function onError() {
-        console.warn('❌ Falha na URL direta, tentando alternativas...');
-        const urlsAlt = [
-          `https://raw.githubusercontent.com/Pokemon-3D-api/assets/main/models/opt/${forma}/${String(pokemonId).padStart(4, '0')}.glb`,
-          `https://raw.githubusercontent.com/Pokemon-3D-api/assets/main/models/opt/${forma}/${String(pokemonId).padStart(3, '0')}.glb`
-        ];
-        let i = 0;
-        const proxima = () => {
-          if (i >= urlsAlt.length) { tentarAPI(); return; }
-          const url = urlsAlt[i++];
-          console.log('🔄 Tentando:', url);
-          modelo.removeEventListener('model-loaded', onLoaded);
-          modelo.removeEventListener('model-error', onError);
-          modelo.addEventListener('model-loaded', onLoaded, { once: true });
-          modelo.addEventListener('model-error', proxima, { once: true });
-          modelo.setAttribute('src', url);
-        };
-        const tentarAPI = () => {
-          loading.textContent = '🌐 Consultando API pública...';
-          fetch('https://pokemon-3d-api.onrender.com/v1/pokemon')
-            .then(r => r.json())
-            .then(dados => {
-              const arr = Array.isArray(dados) ? dados : (dados.pokemon || []);
-              const p = arr.find(x => x.id === pokemonId);
-              if (p && p.forms && p.forms.length > 0) {
-                const regular = p.forms.find(f => f.formName === 'regular') || p.forms[0];
-                modelo.addEventListener('model-loaded', onLoaded, { once: true });
-                modelo.addEventListener('model-error', () => {
-                  loading.textContent = '⚠️ Não foi possível carregar o modelo 3D.';
-                }, { once: true });
-                modelo.setAttribute('src', regular.model);
-              } else {
-                loading.textContent = '⚠️ Modelo 3D não disponível para este Pokémon.';
-              }
-            })
-            .catch(() => {
-              loading.textContent = '⚠️ Não foi possível carregar o modelo 3D.';
-            });
-        };
-        proxima();
-      }
+      const onLoaded = () => {
+        console.log('✅ Modelo da fauna carregado');
+        ajustar();
+      };
+
+      const onError = () => {
+        console.warn('❌ Erro ao carregar modelo da fauna');
+        loading.textContent = '⚠️ Não foi possível carregar o modelo 3D (verifique assets/modelo/).';
+      };
 
       modelo.addEventListener('model-loaded', onLoaded, { once: true });
       modelo.addEventListener('model-error', onError, { once: true });
 
-      modelo.setAttribute('src', urlDireta);
-
       setTimeout(() => {
-        if (loading.style.display !== 'none') {
+        if (loading.style.display !== 'none' && tentativas >= 40) {
           loading.textContent = '⏱️ Demorou demais. O modelo pode estar indisponível.';
         }
       }, 25000);
