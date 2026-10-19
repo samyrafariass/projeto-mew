@@ -62,7 +62,7 @@ class AccountTests(unittest.TestCase):
         self.assertNotIn('token_hash', json.dumps(account))
 
     def test_validation_duplicate_email_and_login_errors(self):
-        for key, value in (('nome', 'x'), ('nome', 'a'*51), ('email', 'invalid'), ('senha', 'curta'), ('senha', 'a'*129), ('senha', None)):
+        for key, value in (('nome', 'x'), ('nome', 'a'*51), ('email', 'invalid'), ('senha', '1234'), ('senha', 'a'*129), ('senha', None)):
             body = {'nome': 'Pessoa teste', 'email': 'pessoa@example.com', 'senha': PASSWORD, key: value}
             self.assert_error(400, 'POST', '/api/cadastro', body, ip=key+str(value))
         self.signup()

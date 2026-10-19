@@ -15,7 +15,7 @@ const questions = JSON.parse(fs.readFileSync(process.env.MEW_TEST_QUESTIONS_PATH
     // Isola a integração local; as APIs públicas de Pokémon não são parte do teste.
     await context.route('**/*', route => new URL(route.request().url()).origin === base ? route.continue() : route.abort());
     const email = `browser-${require('node:crypto').randomUUID()}@example.com`;
-    const password = 'Senha longa do navegador de teste!';
+    const password = '12345';
     // Visitante é encaminhado à entrada e volta ao mesmo quiz após se cadastrar.
     await page.goto(`${base}/quiz.html?animal=pe-1`);
     await page.waitForURL('**/login.html?next=*');

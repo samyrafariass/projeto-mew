@@ -26,8 +26,8 @@ def validate_signup(body):
     if not isinstance(name, str) or not 2 <= len(name.strip()) <= 50 or any(ord(c) < 32 for c in name):
         raise ValueError('Informe um nome de 2 a 50 caracteres.')
     email = normalize_email(body.get('email'))
-    if not isinstance(password, str) or not 15 <= len(password) <= 128:
-        raise ValueError('A senha deve ter de 15 a 128 caracteres.')
+    if not isinstance(password, str) or not 5 <= len(password) <= 128:
+        raise ValueError('A senha deve ter de 5 a 128 caracteres.')
     return name.strip(), email, password
 
 

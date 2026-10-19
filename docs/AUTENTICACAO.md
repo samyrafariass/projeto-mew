@@ -15,7 +15,7 @@ encaminha visitantes ao login, preservando o desafio escolhido no retorno.
 ```
 
 Nome: 2 a 50 caracteres. E-mail: até 100 caracteres, normalizado para minúsculas
-e sem espaços nas extremidades. Senha: 15 a 128 caracteres; espaços e Unicode
+e sem espaços nas extremidades. Senha: 5 a 128 caracteres; espaços e Unicode
 são aceitos, sem regras artificiais de símbolos obrigatórios.
 
 As telas enviam `X-MEW-Client: browser`. Retorno 201, com cookie HttpOnly e
