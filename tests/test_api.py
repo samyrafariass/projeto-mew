@@ -177,6 +177,8 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(self.call("GET", "/api/exportacoes/respostas.csv?dificuldade=foo", token=ADMIN)[0], 400)
 
     def test_recommendations_and_events(self):
+        inputs_path = '/api/participantes/me/recomendacoes/insumos'
+        self.assertEqual(self.call('GET', inputs_path)[0], 401)
         initial = self.call("GET", "/api/participantes/me/recomendacoes", token=self.token)[1]
         self.assertEqual(len(initial["recomendacoes"]), 3)
         self.assertTrue(all(item["dificuldade"] == "facil" for item in initial["recomendacoes"]))
@@ -187,6 +189,16 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(sum(item["total"] for item in next_items["topicos"].values()), 5)
         self.assertTrue(all(item["dificuldade"] == "intermediario" for item in next_items["recomendacoes"]))
         self.assertEqual(next_items["metodo"], "conteudo_cosseno")
+        status, inputs = self.call('GET', inputs_path, token=self.token)
+        self.assertEqual(status, 200)
+        self.assertEqual(inputs['respostas_analisadas'], 5)
+        self.assertEqual(inputs['nivel_alvo'], 'intermediario')
+        self.assertEqual(len(inputs['necessidades']), 7)
+        self.assertEqual(len(inputs['candidatos']), 30)
+        for field in ('correta', 'explicacao', 'pergunta', 'opcoes', 'password_hash', 'token_hash'):
+            self.assertNotIn('"' + field + '"', json.dumps(inputs))
+        for candidate in inputs['candidatos']:
+            self.assertEqual(len(candidate['features']), 7)
 
 
 class StorageTests(unittest.TestCase):

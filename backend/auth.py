@@ -64,23 +64,42 @@ def dummy_password():
 
 
 class AuthLimiter:
-    """Até 5 tentativas por conta/IP em 15 minutos, sem teto por IP da turma."""
+    """Até 5 falhas por conta/IP em 15 minutos, sem teto por IP da turma.
+
+    O contador pertence à instância do serviço; não é um bloqueio compartilhado
+    entre processos. Logins concluídos limpam as falhas daquela conta/IP.
+    """
+
+    window = 900
+    limit = 5
+    max_buckets = 10000
 
     def __init__(self):
         self.lock = threading.Lock()
         self.buckets = {}
 
+    def key(self, ip, email):
+        return hashlib.sha256((ip + '\0' + email).encode()).hexdigest()
+
+    def prune(self, current):
+        self.buckets = {key: item for key, item in self.buckets.items() if item[0] > current}
+
     def allow(self, ip, email=''):
-        current = time.monotonic()
-        window = 900
-        keys = [(('login-account', hashlib.sha256((ip + '\0' + email).encode()).hexdigest()), 5)]
         with self.lock:
-            self.buckets = {key: item for key, item in self.buckets.items() if item[0] > current}
-            if len(self.buckets) > 10000:
-                return False
-            if any(self.buckets.get(key, (0, 0))[1] >= limit for key, limit in keys):
-                return False
-            for key, _ in keys:
-                expiry, count = self.buckets.get(key, (current + window, 0))
-                self.buckets[key] = (expiry, count + 1)
-            return True
+            self.prune(time.monotonic())
+            return self.buckets.get(self.key(ip, email), (0, 0))[1] < self.limit
+
+    def record_failure(self, ip, email=''):
+        current = time.monotonic()
+        key = self.key(ip, email)
+        with self.lock:
+            self.prune(current)
+            if key not in self.buckets and len(self.buckets) >= self.max_buckets:
+                # Limita memória sem bloquear novas contas da mesma rede.
+                del self.buckets[min(self.buckets, key=lambda item: self.buckets[item][0])]
+            expiry, count = self.buckets.get(key, (current + self.window, 0))
+            self.buckets[key] = (expiry, min(count + 1, self.limit))
+
+    def record_success(self, ip, email=''):
+        with self.lock:
+            self.buckets.pop(self.key(ip, email), None)

@@ -15,7 +15,7 @@ SESSION_SECONDS = 7 * 24 * 60 * 60
 def secure_cookie_setting():
     value = os.getenv('MEW_COOKIE_SECURE', '').strip().lower()
     if not value:
-        return os.getenv('VERCEL_ENV') == 'production' or os.getenv('MEW_ENV') == 'production'
+        return bool(os.getenv('VERCEL')) or os.getenv('VERCEL_ENV') in ('production', 'preview') or os.getenv('MEW_ENV') == 'production'
     if value not in ('true', 'false', '1', '0'):
         raise ConfigurationError('MEW_COOKIE_SECURE deve ser true ou false.')
     return value in ('true', '1')

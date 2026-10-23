@@ -30,7 +30,9 @@ window.MewAPI = (() => {
   async function request(path, { method = 'GET', body, token, binary = false, participantId } = {}) {
     if (method === 'POST' && !token) await currentSession();
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 8000);
+    // Cadastro e login podem aguardar uma fila de hashes e a inicialização da API.
+    const authPath = /^\/api\/(cadastro|login|participantes|sessao)$/.test(path);
+    const timer = setTimeout(() => controller.abort(), authPath ? 45000 : 15000);
     try {
       const response = await fetch(path, {
         method,

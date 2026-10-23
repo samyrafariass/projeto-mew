@@ -8,3 +8,5 @@ backend/data/
 backend/recommender/build/
 test-results/
 .tools/
+.build/
+.vercel/

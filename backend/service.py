@@ -9,7 +9,7 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from uuid import uuid4
 
-from .recommendations import LEVELS, recommend
+from .recommendations import LEVELS, prepare_recommendation, recommend
 from .auth import AuthLimiter, dummy_password, hash_password, normalize_email, validate_signup, verify_password
 
 
@@ -122,11 +122,15 @@ class Service:
         account = next((p for p in data['participants'].values() if p.get('registered_at') and p.get('email') == email), None)
         encoded = account.get('password_hash') if account else dummy_password()
         valid = verify_password(password, encoded)
-        require(account is not None and valid, 401, 'invalid_credentials', 'E-mail ou senha inválidos.')
+        if account is None or not valid:
+            self.auth_limiter.record_failure(client_ip, email)
+            raise ApiError(401, 'invalid_credentials', 'E-mail ou senha inválidos.')
         with self.repository.transaction(participant_id=account['id'], sections=('sessions',)) as data:
             current = data['participants'].get(account['id'])
             require(current is not None and current.get('password_hash') == encoded, 401, 'invalid_credentials', 'E-mail ou senha inválidos.')
-            return 200, self.new_session(data, current)
+            session = self.new_session(data, current)
+        self.auth_limiter.record_success(client_ip, email)
+        return 200, session
 
     def own_attempt(self, data, attempt_id, participant):
         attempt = data["attempts"].get(attempt_id)
@@ -198,10 +202,11 @@ class Service:
             attempts = [a for a in data['attempts'].values() if all(a[key] == value for key, value in filters.items())]
             return 200, self.csv(attempts)
 
+        recommendation_paths = ('/api/participantes/me/recomendacoes', '/api/participantes/me/recomendacoes/insumos')
         sections = ['sessions']
-        if path in ('/api/participantes/me/historico', '/api/participantes/me/recomendacoes') or parts[:2] == ['api', 'tentativas']:
+        if path == '/api/participantes/me/historico' or path in recommendation_paths or parts[:2] == ['api', 'tentativas']:
             sections.append('attempts')
-        if path in ('/api/eventos', '/api/participantes/me/recomendacoes'):
+        if path == '/api/eventos' or path in recommendation_paths:
             sections.append('events')
         attempt_id = parts[2] if len(parts) >= 3 and parts[:2] == ['api', 'tentativas'] else None
         request_id = body.get('request_id') if method == 'POST' and path == '/api/tentativas' else None
@@ -229,6 +234,8 @@ class Service:
                                             "iniciada_em": a["started_at"], "resultado": self.result(a) if a["status"] == "concluida" else None} for a in attempts]}
             if method == "GET" and path == "/api/participantes/me/recomendacoes":
                 return 200, recommend(data, pid, self.catalog, self.quizzes)
+            if method == 'GET' and path == '/api/participantes/me/recomendacoes/insumos':
+                return 200, prepare_recommendation(data, pid, self.catalog, self.quizzes)
             if method == "POST" and path == "/api/eventos":
                 require(isinstance(body.get("tipo"), str) and body["tipo"] in ("visualizacao_especie", "exploracao_3d", "hotspot"), 400, "invalid_event", "Evento inválido.")
                 require(isinstance(body.get("especie_id"), str) and body["especie_id"] in self.catalog, 400, "invalid_species", "Espécie inválida.")

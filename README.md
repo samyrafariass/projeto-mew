@@ -12,7 +12,7 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
-Copie `.env.example` para `.env` e preencha `DATABASE_URL` com a conexão Neon
+Crie um arquivo `.env` na raiz e preencha `DATABASE_URL` com a conexão Neon
 fornecida pela equipe. Esse arquivo é privado, ignorado pelo Git e nunca servido
 ao navegador. Em seguida, prepare os complementos do banco:
 
@@ -106,7 +106,29 @@ resposta salva, inclusive de tentativas incompletas, com identificação anônim
 pergunta, escolha, gabarito, acerto, dificuldade e horários em UTC. Tentativas sem
 respostas ainda não produzem linhas. As alternativas usam índices de **0 a 3**.
 
-## Recomendador C++
+## Recomendador C++ e WebAssembly
+
+No navegador, o C++ é executado como WebAssembly. A API prepara estatísticas e
+vetores agregados da participação, sem enviar perguntas ou gabaritos. O módulo
+`Site/wasm/recommender-v1.wasm` calcula as pontuações e o front seleciona as três
+sugestões com os mesmos critérios de nível e desempate da API. O arquivo Wasm
+versionado tem cerca de 2,3 KB e não requer compilador instalado na Vercel.
+
+Após concluir um quiz, `document.querySelector('#recomendacoes').dataset.motor`
+mostra `wasm` quando o cálculo foi realizado no navegador. Se o módulo não puder
+ser carregado, a interface consulta o recomendador do servidor e informa o motor
+real nesse atributo. Notas, respostas, pontos e selos continuam sob controle da API.
+
+Para recompilar depois de alterar o núcleo C++, use Zig ou Clang com wasm-ld:
+
+```powershell
+python backend/recommender/build_wasm.py
+python backend/recommender/build_wasm.py --check
+```
+
+É possível apontar `MEW_WASM_CXX` para o compilador. O build verifica hashes do
+código e do binário, evitando publicar um Wasm antigo após uma alteração no C++.
+O cálculo é compartilhado com o executável nativo descrito abaixo.
 
 O código em `backend/recommender/main.cpp` calcula a similaridade de cosseno entre
 as dificuldades do participante por tópico e o conteúdo de cada desafio. A API
@@ -129,6 +151,8 @@ O destino padrão é `backend/recommender/build/recommender.exe` no Windows e
 executa o mesmo cálculo em Python. O campo `motor` da rota de recomendações mostra
 `cpp`, `python` ou `python_fallback`; assim uma falha nativa não é mascarada como C++.
 O executável não vai para o Git e deve ser recompilado em outro computador.
+Essa descrição dos campos `motor` se refere à rota de recomendações do servidor;
+o resultado WebAssembly é produzido pelo helper `MewRecommender` no navegador.
 
 O método é filtragem baseada em conteúdo, uma das opções previstas no documento.
 Não é um modelo de aprendizado por reforço nem um modelo supervisionado treinado.
@@ -145,7 +169,7 @@ Fórmula, limitações e critérios estão em [RECOMENDADOR.md](docs/RECOMENDADO
 | `MEW_ADMIN_TOKEN` | Chave gerada em arquivo | Chave da exportação geral, mínimo 24 caracteres |
 | `MEW_RECOMMENDER_BIN` | Binário em `backend/recommender/build` | Executável do recomendador |
 | `MEW_PYTHON` | Detecção pelo iniciador Windows | Python usado por `iniciar.bat` |
-| `MEW_COOKIE_SECURE` | `true` em produção (`MEW_ENV` ou `VERCEL_ENV`); `false` localmente | Defina `true` ao usar HTTPS; `false` somente para desenvolvimento HTTP |
+| `MEW_COOKIE_SECURE` | `true` na Vercel, inclusive prévias, ou `MEW_ENV=production`; `false` localmente | Defina `true` ao usar HTTPS; `false` somente para desenvolvimento HTTP |
 
 Também existem os argumentos `--host`, `--port` e `--data-file`. O arquivo `.env`
 é carregado automaticamente ao iniciar o servidor ou executar a migração.
@@ -169,6 +193,7 @@ sessão continua sendo de sete dias, e o logout revoga a sessão atual no banco.
 - [Cadastro e login para o frontend](docs/AUTENTICACAO.md)
 - [Contrato para o banco definitivo](docs/BANCO.md)
 - [Algoritmo de recomendação](docs/RECOMENDADOR.md)
+- [Publicação na Vercel e verificação do WebAssembly](docs/VERCEL.md)
 
 ```powershell
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
@@ -186,3 +211,6 @@ ações de uma aba antiga e envio de eventos 3D/hotspots. A integração dos eve
 isola o renderizador; ela não mede FPS nem valida um headset VR.
 Use `python -m tests.run_browser --neon` para testar o fluxo de navegador contra
 o PostgreSQL real com rollback ao terminar.
+Acrescente `--vercel` para usar a entrada `api/index.py` e o site preparado para
+publicação. Os testes também conferem o Wasm, a alternativa do servidor e a
+ausência de gabaritos nos arquivos públicos.

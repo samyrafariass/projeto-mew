@@ -75,8 +75,8 @@ essas chamadas do navegador. `MewAPI.authenticated()` usa o cookie e envia o ID
 da conta em `X-MEW-Participant`; em POST também envia `X-CSRF-Token`. O código CSRF
 fica apenas em memória. O cookie usa `HttpOnly`, `SameSite=Strict` e `Path=/`.
 Em HTTPS, configure `MEW_COOKIE_SECURE=true` para acrescentar `Secure`; em HTTP
-local use `false`. `MEW_ENV=production` ou `VERCEL_ENV=production` ativa Secure
-por padrão quando não há configuração explícita.
+local use `false`. Na Vercel, produção e prévias ativam Secure por padrão quando
+não há configuração explícita; `MEW_ENV=production` também ativa essa proteção.
 
 No localStorage fica somente um marcador com ID público e revisão aleatória
 para avisar outras abas. Ao trocar de conta ou sair, elas recarregam seus dados.

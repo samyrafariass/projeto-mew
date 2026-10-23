@@ -32,6 +32,9 @@ class PostgresRepository:
         self.pool = ConnectionPool(
             conninfo=url, name='mew-api', min_size=0, max_size=4, timeout=12,
             kwargs={'row_factory': dict_row, 'connect_timeout': 10, 'prepare_threshold': None},
+            # Uma conexão pode ter caído enquanto a função estava inativa.
+            # A validação ocorre antes da transação; escritas não são repetidas.
+            check=ConnectionPool.check_connection, max_idle=60,
             open=True,
         )
         try:

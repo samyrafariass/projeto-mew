@@ -37,16 +37,34 @@ não mudam o nível alvo. Retornar três espécies diferentes, com foco e motivo
 
 ## C++ e integração
 
-Python lê os registros e monta vetores. O binário C++ recebe dimensões, quantidade
-de candidatos, vetor de necessidades e, para cada candidato, conteúdo, ajuste e
-novidade. A saída é uma pontuação por candidato. A comunicação usa stdin/stdout,
-sem shell e sem dependências de JSON. Há timeout de três segundos e validação da
-quantidade de resultados e dos valores finitos.
+Python lê os registros e monta os vetores. O frontend solicita
+`GET /api/participantes/me/recomendacoes/insumos`, autenticado, e recebe apenas
+estatísticas por tópico, nível alvo e os vetores dos trinta candidatos. Não recebe
+perguntas, alternativas corretas, explicações privadas ou credenciais do banco.
 
-O ranking final, o controle de dificuldade e as explicações ficam na API. Sem
-executável, o motor Python usa exatamente a mesma fórmula. `motor=cpp` comprova
-uso do executável; `python_fallback` identifica falha do executável e `python`
-identifica ausência dele. O teste de paridade compara pontuações entre motores.
+`score.cpp` contém o cálculo compartilhado entre o executável nativo e o módulo
+WebAssembly. `build_wasm.py` usa Zig ou Clang para compilar esse C++ para Wasm,
+sem imports, filesystem, threads ou bibliotecas externas. O módulo usa uma página
+de memória fixa de 64 KiB e dois vetores de até cem doubles. A interface possui
+versão de ABI e rejeita dimensões, NaN e números fora dos limites permitidos.
+
+`Site/recomendador.js` carrega o módulo uma vez por página e executa o cálculo
+em C++/Wasm. O ranking respeita o nível alvo, retorna três espécies distintas e
+usa os mesmos desempates da API. Para evitar diferenças mínimas entre plataformas,
+a ordenação compara pontuações arredondadas a doze casas decimais. O resultado
+do helper identifica `motor=wasm`; o atributo `data-motor` da seção de sugestões
+permite verificar a execução sem alterar o visual do quiz.
+
+Se Wasm estiver indisponível ou seu download falhar, o frontend chama a rota
+original de recomendações. Ela mantém o cálculo em Python ou usa o executável
+nativo quando este estiver instalado. Nessa rota, `motor=cpp` comprova o uso do
+binário, `python_fallback` identifica falha dele e `python` indica sua ausência.
+O protocolo nativo continua usando stdin/stdout e timeout de três segundos.
+
+Notas, pontuação do aluno, correção e selos continuam sendo calculados e gravados
+pela API. Alterar uma recomendação no navegador não altera os dados do quiz.
+Os testes comparam pontuações e rankings entre Python, C++ nativo e WebAssembly,
+incluindo novos participantes, diferentes dificuldades e falha de carregamento.
 
 ## Limites
 

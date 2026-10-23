@@ -18,7 +18,8 @@ def score(weakness, features, fit, novelty):
     return 0.65 * (dot / norm if norm else 0) + 0.25 * fit + 0.10 * novelty
 
 
-def recommend(data, participant_id, catalog, quizzes):
+def prepare_recommendation(data, participant_id, catalog, quizzes):
+    """Somente estatísticas e vetores agregados; nunca inclui questões ou gabaritos."""
     attempts = [a for a in data["attempts"].values() if a["participant_id"] == participant_id]
     counts = {topic: {"acertos": 0, "total": 0} for topic in TOPICS}
     for attempt in attempts:
@@ -46,8 +47,20 @@ def recommend(data, participant_id, catalog, quizzes):
             completed = sum(a["especie_id"] == species_id and a["dificuldade"] == level and a["status"] == "concluida" for a in attempts)
             novelty = 1 / (1 + completed + (.25 if species_id in visits else 0))
             fit = 1 / (1 + abs(level_index - target))
+            strongest = max(range(len(TOPICS)), key=lambda i: weakness[i] * features[i])
             candidates.append({"especie_id": species_id, "nome": catalog[species_id]["nome_popular"],
-                               "dificuldade": level, "features": features, "fit": fit, "novelty": novelty})
+                               "dificuldade": level, "features": features, "fit": fit, "novelty": novelty,
+                               "topico_foco": TOPICS[strongest],
+                               "motivo": "Comece explorando esta espécie." if not total else "Reforce este tema em uma dificuldade ajustada ao seu último resultado."})
+    return {"versao": 1, "metodo": "conteudo_cosseno", "ordem_topicos": list(TOPICS),
+            "necessidades": weakness, "nivel_alvo": LEVELS[target], "candidatos": candidates,
+            "respostas_analisadas": total, "taxa_acertos": correct / total if total else None, "topicos": counts}
+
+
+def recommend(data, participant_id, catalog, quizzes):
+    prepared = prepare_recommendation(data, participant_id, catalog, quizzes)
+    weakness, candidates = prepared['necessidades'], prepared['candidatos']
+    target = LEVELS.index(prepared['nivel_alvo'])
     scores = [score(weakness, c["features"], c["fit"], c["novelty"]) for c in candidates]
     executable = Path(os.getenv("MEW_RECOMMENDER_BIN", str(Path(__file__).parent / "recommender" / "build" / ("recommender.exe" if os.name == "nt" else "recommender"))))
     engine = "python"
@@ -67,18 +80,16 @@ def recommend(data, participant_id, catalog, quizzes):
     # aluno no fácil depois de demonstrar domínio do nível atual.
     ranking = sorted(range(len(candidates)), key=lambda i: (
         abs(LEVELS.index(candidates[i]["dificuldade"]) - target),
-        -scores[i], candidates[i]["especie_id"], candidates[i]["dificuldade"]))
+        -round(scores[i], 12), candidates[i]["especie_id"], candidates[i]["dificuldade"]))
     suggestions, seen = [], set()
     for index in ranking:
         c = candidates[index]
         if c["especie_id"] in seen:
             continue
         seen.add(c["especie_id"])
-        strongest = max(range(len(TOPICS)), key=lambda i: weakness[i] * c["features"][i])
         suggestions.append({"especie_id": c["especie_id"], "nome": c["nome"], "dificuldade": c["dificuldade"],
-                            "pontuacao": round(scores[index], 6), "topico_foco": TOPICS[strongest],
-                            "motivo": "Comece explorando esta espécie." if not total else "Reforce este tema em uma dificuldade ajustada ao seu último resultado."})
+                            "pontuacao": round(scores[index], 6), "topico_foco": c['topico_foco'], "motivo": c['motivo']})
         if len(suggestions) == 3:
             break
-    return {"motor": engine, "metodo": "conteudo_cosseno", "respostas_analisadas": total,
-            "taxa_acertos": correct / total if total else None, "topicos": counts, "recomendacoes": suggestions}
+    return {"motor": engine, **{key: prepared[key] for key in ('metodo', 'respostas_analisadas', 'taxa_acertos', 'topicos')},
+            "recomendacoes": suggestions}

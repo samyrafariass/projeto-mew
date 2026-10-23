@@ -88,6 +88,7 @@ const questions = JSON.parse(fs.readFileSync(process.env.MEW_TEST_QUESTIONS_PATH
     }
     await page.locator('.selo-credencial').waitFor();
     await page.locator('#recomendacoes a').first().waitFor();
+    assert.equal(await page.locator('#recomendacoes').getAttribute('data-motor'), 'wasm', 'As sugestões usam o C++ compilado para WebAssembly');
     assert.equal(await page.locator('.resultado-placar').innerText(), '4/5');
     const result = await (await context.request.get(`${base}/api/tentativas/${attemptId}`, {headers: auth})).json();
     assert.equal(result.respostas.length, 5);
@@ -102,6 +103,16 @@ const questions = JSON.parse(fs.readFileSync(process.env.MEW_TEST_QUESTIONS_PATH
     assert.ok(csv.includes(attemptId));
     await page.reload();
     await page.locator('.selo-credencial').waitFor();
+
+    // Uma falha no download Wasm preserva as sugestões pela API.
+    await page.route('**/wasm/recommender-v1.wasm', route => route.abort());
+    await page.reload();
+    await page.locator('#recomendacoes a').first().waitFor();
+    assert.notEqual(await page.locator('#recomendacoes').getAttribute('data-motor'), 'wasm');
+    await page.unroute('**/wasm/recommender-v1.wasm');
+    await page.reload();
+    await page.locator('#recomendacoes a').first().waitFor();
+    assert.equal(await page.locator('#recomendacoes').getAttribute('data-motor'), 'wasm');
 
     await page.getByRole('link', {name: 'Meu histórico', exact: true}).click();
     await page.getByRole('link', {name: 'Ver resultado e baixar respostas'}).waitFor();
@@ -200,7 +211,7 @@ const questions = JSON.parse(fs.readFileSync(process.env.MEW_TEST_QUESTIONS_PATH
     await secondTab.locator('#mew-account').getByRole('link', {name: 'Entrar', exact: true}).waitFor();
     await secondTab.close();
     assert.deepEqual(errors, []);
-    console.log('E2E OK: cookie HttpOnly, troca de conta e logout entre abas, bloqueio de aba antiga, cadastro, login, quiz, retry, retomada, selo, recomendação, histórico, CSV, catálogo e celular.');
+    console.log('E2E OK: C++/Wasm e alternativa do servidor, cookie HttpOnly, troca de conta e logout entre abas, cadastro, login, quiz, retry, retomada, selo, histórico, CSV, catálogo e celular.');
     console.log(`Motor de recomendação: ${recommendations.motor}`);
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

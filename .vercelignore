@@ -1,0 +1,12 @@
+.git/
+.venv/
+.tools/
+.build/
+.env
+.env.*
+test-results/
+tests/
+backend/data/
+backend/recommender/build/
+**/__pycache__/
+**/*.pyc

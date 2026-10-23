@@ -18,10 +18,11 @@ def main():
         raise SystemExit('Instale um compilador C++17 (g++, clang++, Visual C++ ou Zig) e execute novamente. A API continua usando o motor Python.')
     name = Path(compiler).stem
     env = os.environ.copy()
+    sources = [str(folder / name) for name in ('main.cpp', 'score.cpp')]
     if name == 'cl':
-        command = [compiler, '/std:c++17', '/O2', '/EHsc', str(folder / 'main.cpp'), f'/Fe:{output}', f'/Fo:{output.parent / "main.obj"}']
+        command = [compiler, '/std:c++17', '/O2', '/EHsc', *sources, f'/Fe:{output}', f'/Fo:{output.parent}{os.sep}']
     else:
-        command = [compiler] + (['c++'] if name == 'zig' else []) + [str(folder / 'main.cpp'), '-std=c++17', '-O2', '-o', str(output)]
+        command = [compiler] + (['c++'] if name == 'zig' else []) + [*sources, '-std=c++17', '-O2', '-o', str(output)]
         if name == 'zig':
             env['ZIG_GLOBAL_CACHE_DIR'] = str(root / '.tools' / 'zig-global')
             env['ZIG_LOCAL_CACHE_DIR'] = str(root / '.tools' / 'zig-cache')

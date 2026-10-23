@@ -49,6 +49,7 @@ com um novo login. O armazenamento persiste somente hashes dos tokens.
 | GET | `/participantes/me` | Participante | Perfil, estado de cadastro e pontuação |
 | GET | `/participantes/me/historico` | Participante | `tentativas`, da mais recente para a mais antiga |
 | GET | `/participantes/me/recomendacoes` | Participante | Motor, método, perfil por tópico e três sugestões |
+| GET | `/participantes/me/recomendacoes/insumos` | Participante | Estatísticas e vetores agregados para o C++/WebAssembly |
 | POST | `/eventos` | Participante | Registro de navegação |
 | POST | `/tentativas` | Participante | Tentativa com cinco perguntas sem gabarito |
 | GET | `/tentativas/:id` | Dono | Estado, perguntas, respostas já enviadas e resultado se concluída |
@@ -61,6 +62,14 @@ com um novo login. O armazenamento persiste somente hashes dos tokens.
 IDs de espécie são `pe-1` a `pe-10`. Dificuldades são `facil`, `intermediario`,
 `dificil`. No Neon, `Id_Questao` é o inteiro da tabela `questao`, e `id` é sua
 representação textual. No modo JSON local, IDs como `pe1-f1` são preservados.
+
+A rota `/participantes/me/recomendacoes/insumos` retorna `versao: 1`,
+`ordem_topicos`, sete `necessidades`, `nivel_alvo`, `topicos`,
+`respostas_analisadas`, `taxa_acertos` e `candidatos`. Cada candidato contém
+`especie_id`, `nome`, `dificuldade`, sete `features`, `fit`, `novelty`,
+`topico_foco` e `motivo`. Os vetores contêm apenas estatísticas; não há enunciados,
+gabaritos ou respostas individuais. A rota original de recomendações permanece
+compatível e serve como alternativa quando WebAssembly falha.
 
 ## Iniciar tentativa
 

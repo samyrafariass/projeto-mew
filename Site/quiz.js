@@ -473,7 +473,8 @@ async function finalizarQuiz(savedResult = null) {
 
   const area = document.getElementById('recomendacoes');
   try {
-    const data = await MewAPI.authenticated('/api/participantes/me/recomendacoes');
+    const data = await MewRecommender.recommend();
+    area.dataset.motor = data.motor;
     const niveis = { facil: 'Fácil', intermediario: 'Intermediário', dificil: 'Difícil' };
     area.innerHTML = '<h2>Seus próximos desafios</h2>' + data.recomendacoes.map(item =>
       `<a href="quiz.html?animal=${encodeURIComponent(item.especie_id)}&nivel=${encodeURIComponent(item.dificuldade)}&novo=1">${MewAPI.escape(item.nome)} · ${MewAPI.escape(niveis[item.dificuldade])}</a><p>${MewAPI.escape(item.motivo)} Foco: ${MewAPI.escape(TOPICOS_EXIBIDOS[topicoCanonico(item.topico_foco)] || topicoCanonico(item.topico_foco))}.</p>`

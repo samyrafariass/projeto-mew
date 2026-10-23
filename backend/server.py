@@ -12,6 +12,7 @@ from .service import ApiError, Service
 from .storage import AccountConflict, JsonRepository, StorageUnavailable
 from .config import ConfigurationError, database_url as configured_database_url, load_environment
 from .browser import browser_session, cookie_header, read_cookie, secure_cookie_setting, verify_browser_post
+from .diagnostics import RequestTrace
 
 ROOT = Path(__file__).resolve().parent.parent
 SITE = ROOT / "Site"
@@ -22,6 +23,14 @@ class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(SITE), **kwargs)
 
+    @property
+    def api_service(self):
+        return self.server.service
+
+    @property
+    def cookie_secure(self):
+        return self.server.cookie_secure
+
     def end_headers(self):
         if getattr(self, '_session_cookie', None):
             self.send_header('Set-Cookie', self._session_cookie)
@@ -29,13 +38,26 @@ class Handler(SimpleHTTPRequestHandler):
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("Referrer-Policy", "same-origin")
         self.send_header("Cache-Control", "no-store")
+        trace = getattr(self, '_request_trace', None)
+        if trace is not None:
+            self.send_header('X-Request-ID', trace.request_id)
         super().end_headers()
+
+    def send_response(self, code, message=None):
+        trace = getattr(self, '_request_trace', None)
+        if trace is not None:
+            trace.status = code
+        super().send_response(code, message)
 
     def log_message(self, fmt, *args):
         # Não registrar query string, cabeçalhos de autenticação ou corpos.
-        logging.info("%s %s", self.command, urlsplit(self.path).path)
+        if getattr(self, '_request_trace', None) is None:
+            logging.info("%s %s", self.command, urlsplit(self.path).path)
 
     def send_json(self, status, value):
+        trace = getattr(self, '_request_trace', None)
+        if trace is not None and isinstance(value, dict) and isinstance(value.get('erro'), dict):
+            trace.error_code = value['erro'].get('codigo')
         payload = json.dumps(value, ensure_ascii=False, allow_nan=False).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
@@ -45,6 +67,7 @@ class Handler(SimpleHTTPRequestHandler):
 
     def api(self):
         self._session_cookie = None
+        self._request_trace = RequestTrace(self.command, self.path)
         try:
             body = {}
             if self.command == "POST":
@@ -71,7 +94,7 @@ class Handler(SimpleHTTPRequestHandler):
             token = bearer or cookie
             parsed = urlsplit(self.path)
             if self.command == 'POST' and browser_client:
-                verify_browser_post(self.headers, cookie, self.server.cookie_secure)
+                verify_browser_post(self.headers, cookie, self.cookie_secure)
                 if parsed.path not in ('/api/login', '/api/cadastro', '/api/participantes'):
                     if not self.headers.get('X-MEW-Participant'):
                         raise ApiError(409, 'session_changed', 'Atualize a página para confirmar a conta atual.')
@@ -80,11 +103,11 @@ class Handler(SimpleHTTPRequestHandler):
                     self.send_json(200, {'id': None, 'cadastrado': False, 'usuario': None, 'csrf_token': None})
                     return
                 try:
-                    _, profile = self.server.service.dispatch('GET', '/api/participantes/me', {}, cookie, {})
+                    _, profile = self.api_service.dispatch('GET', '/api/participantes/me', {}, cookie, {})
                 except ApiError as error:
                     if error.status != 401:
                         raise
-                    self._session_cookie = cookie_header('', self.server.cookie_secure)
+                    self._session_cookie = cookie_header('', self.cookie_secure)
                     self.send_json(200, {'id': None, 'cadastrado': False, 'usuario': None, 'csrf_token': None})
                     return
                 self.send_json(200, browser_session(profile, cookie))
@@ -92,19 +115,19 @@ class Handler(SimpleHTTPRequestHandler):
             # O cadastro pode aproveitar um visitante, mas uma conta existente
             # não é sobrescrita ao cadastrar outra pessoa no mesmo navegador.
             if browser_client and self.command == 'POST' and parsed.path == '/api/cadastro' and cookie:
-                _, profile = self.server.service.dispatch('GET', '/api/participantes/me', {}, cookie, {})
+                _, profile = self.api_service.dispatch('GET', '/api/participantes/me', {}, cookie, {})
                 if profile['cadastrado']:
                     token = ''
-            status, value = self.server.service.dispatch(self.command, parsed.path, body, token,
+            status, value = self.api_service.dispatch(self.command, parsed.path, body, token,
                 parse_qs(parsed.query, keep_blank_values=True), client_ip=self.client_address[0],
                 expected_participant=self.headers.get('X-MEW-Participant') if browser_client else None)
             if browser_client and self.command == 'POST' and parsed.path in ('/api/login', '/api/cadastro', '/api/participantes'):
                 fresh_token = value['token']
-                _, profile = self.server.service.dispatch('GET', '/api/participantes/me', {}, fresh_token, {})
-                self._session_cookie = cookie_header(fresh_token, self.server.cookie_secure)
+                _, profile = self.api_service.dispatch('GET', '/api/participantes/me', {}, fresh_token, {})
+                self._session_cookie = cookie_header(fresh_token, self.cookie_secure)
                 value = browser_session(profile, fresh_token, value.get('expira_em'))
             elif browser_client and parsed.path == '/api/logout':
-                self._session_cookie = cookie_header('', self.server.cookie_secure)
+                self._session_cookie = cookie_header('', self.cookie_secure)
             if isinstance(value, bytes):
                 self.send_response(status)
                 self.send_header("Content-Type", "text/csv; charset=utf-8")
@@ -118,14 +141,22 @@ class Handler(SimpleHTTPRequestHandler):
             self.send_json(error.status, {"erro": {"codigo": error.code, "mensagem": error.message}})
         except AccountConflict as error:
             self.send_json(409, {'erro': {'codigo': 'registration_conflict', 'mensagem': str(error)}})
+        except ConfigurationError as error:
+            self._request_trace.error = error
+            self.send_json(503, {'erro': {'codigo': 'configuration_error', 'mensagem': str(error)}})
         except StorageUnavailable as error:
-            logging.warning('Solicitação não concluída: banco indisponível.')
+            self._request_trace.error = error
             self.send_json(503, {'erro': {'codigo': 'database_unavailable', 'mensagem': str(error)}})
         except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
-            pass
-        except Exception:
-            logging.exception("Falha interna da API")
+            self._request_trace.disconnected = True
+        except Exception as error:
+            self._request_trace.error = error
             self.send_json(500, {"erro": {"codigo": "internal_error", "mensagem": "Não foi possível concluir. Tente novamente."}})
+        finally:
+            try:
+                self._request_trace.finish()
+            finally:
+                self._request_trace = None
 
     def allowed_static(self):
         path = unquote(urlsplit(self.path).path)
